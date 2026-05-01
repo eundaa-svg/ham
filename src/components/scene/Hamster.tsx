@@ -9,7 +9,8 @@ interface HamsterProps {
   initialPosition?: [number, number, number]
 }
 
-const MODEL_PATH = '/models/golden_ham.glb'
+const MODEL_PATH   = '/models/golden_ham.glb'
+const BUTT_OFFSET  = 0.6   // 엉덩이까지 거리 (월드 단위)
 
 function pickNewTarget(target: THREE.Vector3) {
   const angle  = Math.random() * Math.PI * 2
@@ -17,10 +18,18 @@ function pickNewTarget(target: THREE.Vector3) {
   target.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius)
 }
 
+// 햄스터 엉덩이 위치 계산 (진행 방향 반대)
+function getButtPosition(pos: THREE.Vector3, rotY: number): [number, number, number] {
+  return [
+    pos.x - Math.sin(rotY) * BUTT_OFFSET,
+    0.06,
+    pos.z - Math.cos(rotY) * BUTT_OFFSET,
+  ]
+}
+
 export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: HamsterProps) {
   const { scene } = useGLTF(MODEL_PATH)
 
-  // 여러 인스턴스가 같은 GLB를 공유할 수 있도록 clone
   const clonedScene = useMemo(() => {
     const cloned = scene.clone(true)
     cloned.traverse((child) => {
@@ -34,26 +43,22 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
 
   useEffect(() => {
     console.log('[GLB] 모델 로드 완료:', MODEL_PATH)
-    console.log('[GLB] scene 객체:', scene)
     console.log('[GLB] 최상위 자식 수:', scene.children.length)
   }, [scene])
 
-  // ── 이동 refs ──────────────────────────────────────────────────
+  // ── refs ────────────────────────────────────────────────────────
   const groupRef  = useRef<THREE.Group>(null!)
   const dirVec    = useRef(new THREE.Vector3())
   const targetVec = useRef(new THREE.Vector3())
 
-  // wander
   const wanderTarget  = useRef(new THREE.Vector3())
   const isIdleRef     = useRef(false)
   const idleTimerRef  = useRef(0)
 
-  // pooping
   const pathIndexRef  = useRef(0)
   const missionDone   = useRef(false)
   const stuckTimerRef = useRef(0)
 
-  // store 값 ref 캐싱 (useFrame 클로저 문제 방지)
   const phaseRef = useRef(useGameStore.getState().phase)
   const pathRef  = useRef(useGameStore.getState().computedPath)
 
@@ -63,7 +68,6 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
       phaseRef.current = s.phase
       pathRef.current  = s.computedPath
 
-      // idle → pooping 전환 순간에만 리셋 (addPoop 때마다 리셋되는 버그 방지)
       if (s.phase === 'pooping' && prevPhase !== 'pooping') {
         console.log('[DEBUG] pooping 시작, 경로 점 수:', s.computedPath.length)
         pathIndexRef.current  = 0
@@ -80,7 +84,6 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
     return unsub
   }, [])
 
-  // 마운트 시 초기 위치 + wander 첫 목적지
   useEffect(() => {
     groupRef.current.position.set(...initialPosition)
     pickNewTarget(wanderTarget.current)
@@ -104,8 +107,25 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
         return
       }
 
-      const tp = path[pathIndexRef.current]
-      targetVec.current.set(tp.x, 0, tp.z)
+      const tp      = path[pathIndexRef.current]
+      const nextIdx = Math.min(pathIndexRef.current + 1, path.length - 1)
+      const nextTp  = path[nextIdx]
+
+      // 다음 점 방향으로 BUTT_OFFSET만큼 앞선 위치를 목표로 삼음
+      // → 엉덩이가 tp 위치를 지날 때 똥이 정확히 경로 위에 찍힘
+      const moveDir = new THREE.Vector3(
+        nextTp.x - tp.x,
+        0,
+        nextTp.z - tp.z,
+      )
+      if (moveDir.length() > 0.001) moveDir.normalize()
+
+      targetVec.current.set(
+        tp.x + moveDir.x * BUTT_OFFSET,
+        0,
+        tp.z + moveDir.z * BUTT_OFFSET,
+      )
+
       dirVec.current.subVectors(targetVec.current, pos)
       dirVec.current.y = 0
       const dist = dirVec.current.length()
@@ -113,9 +133,12 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
       if (dist < 0.15) {
         console.log(`[DEBUG] 점 ${pathIndexRef.current}/${path.length} 도착`)
         stuckTimerRef.current = 0
+
+        // 엉덩이(진행 방향 반대) 위치에 똥 spawn
+        const buttPos = getButtPosition(pos, group.rotation.y)
         useGameStore.getState().addPoop({
           id: `poop-${Date.now()}-${Math.random()}`,
-          position: [pos.x, 0.06, pos.z],
+          position: buttPos,
           rotation: Math.random() * Math.PI * 2,
           spawnedAt: performance.now(),
         })
@@ -123,12 +146,14 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
         return
       }
 
+      // stuck 타임아웃
       stuckTimerRef.current += delta
       if (stuckTimerRef.current > 2) {
         console.warn(`[DEBUG] stuck! 강제 진행: 점 ${pathIndexRef.current}`)
+        const buttPos = getButtPosition(pos, group.rotation.y)
         useGameStore.getState().addPoop({
           id: `poop-stuck-${Date.now()}`,
-          position: [pos.x, 0.06, pos.z],
+          position: buttPos,
           rotation: Math.random() * Math.PI * 2,
           spawnedAt: performance.now(),
         })
@@ -180,12 +205,11 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
     <group ref={groupRef} position={initialPosition}>
       <primitive
         object={clonedScene}
-        scale={[6, 6, 6]}
-        position={[0, 0.5, 0]}   // 바닥 묻힘 방지용 y 오프셋
+        scale={[8, 8, 8]}
+        position={[0, 0.5, 0]}
       />
     </group>
   )
 }
 
-// 앱 시작 시 미리 로드
 useGLTF.preload(MODEL_PATH)
