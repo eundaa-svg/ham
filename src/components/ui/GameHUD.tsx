@@ -1,30 +1,67 @@
-import HamsterPicker from './HamsterPicker'
-import InputPanel from './InputPanel'
-import StartButton from './StartButton'
-import SettingsPanel from './SettingsPanel'
+import { useState } from 'react'
+import TopBar from './TopBar'
+import BottomToolbar from './BottomToolbar'
+import StartFAB from './StartFAB'
+import HamsterPickerSheet from './HamsterPickerSheet'
+import SettingsSheet from './SettingsSheet'
+
+type Sheet = 'hamster' | 'settings' | null
 
 export default function GameHUD() {
+  const [openSheet, setOpenSheet] = useState<Sheet>(null)
+
   return (
-    <div className="fixed inset-0 pointer-events-none z-10">
-      {/* 좌상단: 햄스터 선택 */}
-      <div className="absolute top-6 left-6 pointer-events-auto">
-        <HamsterPicker />
+    <>
+      {/* 상단 바 */}
+      <div style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 20,
+        pointerEvents: 'none',
+      }}>
+        <div style={{
+          padding: 'max(16px, env(safe-area-inset-top)) 16px 16px',
+          background: 'linear-gradient(to bottom, var(--bg) 55%, transparent)',
+          pointerEvents: 'auto',
+        }}>
+          <TopBar
+            onOpenHamster={() => setOpenSheet('hamster')}
+            onOpenSettings={() => setOpenSheet('settings')}
+          />
+        </div>
       </div>
 
-      {/* 우상단: 설정 */}
-      <div className="absolute top-6 right-6 pointer-events-auto">
-        <SettingsPanel />
+      {/* 하단 툴바 */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 20,
+        pointerEvents: 'none',
+        maxWidth: 520,
+        margin: '0 auto',
+      }}>
+        <div style={{
+          padding: '16px 16px max(16px, env(safe-area-inset-bottom))',
+          background: 'linear-gradient(to top, var(--bg) 65%, transparent)',
+          pointerEvents: 'auto',
+        }}>
+          <BottomToolbar />
+        </div>
       </div>
 
-      {/* 하단 중앙: 그리기 */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-auto max-w-[90vw]">
-        <InputPanel />
+      {/* 시작 FAB — 우하단 */}
+      <div style={{
+        position: 'fixed',
+        bottom: 'calc(max(16px, env(safe-area-inset-bottom)) + 88px)',
+        right: 20,
+        zIndex: 30,
+      }}>
+        <StartFAB />
       </div>
 
-      {/* 우하단: 시작 */}
-      <div className="absolute bottom-6 right-6 pointer-events-auto">
-        <StartButton />
-      </div>
-    </div>
+      {/* 바텀 시트 */}
+      {openSheet === 'hamster' && (
+        <HamsterPickerSheet onClose={() => setOpenSheet(null)} />
+      )}
+      {openSheet === 'settings' && (
+        <SettingsSheet onClose={() => setOpenSheet(null)} />
+      )}
+    </>
   )
 }

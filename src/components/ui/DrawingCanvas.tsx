@@ -3,7 +3,7 @@ import { useGameStore } from '../../store/useGameStore'
 
 interface Point { x: number; y: number }
 
-function drawStrokes(
+function redraw(
   canvas: HTMLCanvasElement,
   strokes: Point[][],
   current: Point[],
@@ -12,12 +12,11 @@ function drawStrokes(
 ) {
   const ctx = canvas.getContext('2d')!
   ctx.clearRect(0, 0, w, h)
-  ctx.fillStyle = getComputedStyle(document.documentElement)
-    .getPropertyValue('--bg').trim() || '#F2EBDD'
+  ctx.fillStyle = '#F2EBDD'
   ctx.fillRect(0, 0, w, h)
 
   ctx.strokeStyle = '#3A2818'
-  ctx.lineWidth   = Math.max(2, w / 140)
+  ctx.lineWidth   = Math.max(2, w / 180)
   ctx.lineCap     = 'round'
   ctx.lineJoin    = 'round'
 
@@ -25,163 +24,117 @@ function drawStrokes(
     if (stroke.length < 2) continue
     ctx.beginPath()
     ctx.moveTo(stroke[0].x * w, stroke[0].y * h)
-    for (let i = 1; i < stroke.length; i++) {
-      ctx.lineTo(stroke[i].x * w, stroke[i].y * h)
-    }
+    for (let i = 1; i < stroke.length; i++) ctx.lineTo(stroke[i].x * w, stroke[i].y * h)
     ctx.stroke()
   }
 
   if (current.length >= 2) {
     ctx.beginPath()
     ctx.moveTo(current[0].x * w, current[0].y * h)
-    for (let i = 1; i < current.length; i++) {
-      ctx.lineTo(current[i].x * w, current[i].y * h)
-    }
+    for (let i = 1; i < current.length; i++) ctx.lineTo(current[i].x * w, current[i].y * h)
     ctx.stroke()
   }
 }
 
 export default function DrawingCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const isDrawing = useRef(false)
-  const lastPt    = useRef<Point | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const canvasRef    = useRef<HTMLCanvasElement>(null)
+  const isDrawing    = useRef(false)
+  const lastPt       = useRef<Point | null>(null)
 
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [size, setSize] = useState({ w: 320, h: 200 })
 
-  const CANVAS_W = isExpanded ? 560 : 280
-  const CANVAS_H = isExpanded ? 360 : 160
+  // 컨테이너 너비에 맞춰 캔버스 크기 자동 조정
+  useEffect(() => {
+    const update = () => {
+      if (!containerRef.current) return
+      const w = containerRef.current.clientWidth
+      const h = Math.round(Math.min(260, w * 0.6))
+      setSize({ w, h })
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    if (containerRef.current) ro.observe(containerRef.current)
+    return () => ro.disconnect()
+  }, [])
 
-  const drawnStrokes      = useGameStore((s) => s.drawnStrokes)
-  const currentStroke     = useGameStore((s) => s.currentStroke)
-  const startStroke       = useGameStore((s) => s.startStroke)
-  const addPointToStroke  = useGameStore((s) => s.addPointToStroke)
-  const endStroke         = useGameStore((s) => s.endStroke)
-  const clearDrawnStrokes = useGameStore((s) => s.clearDrawnStrokes)
+  const drawnStrokes     = useGameStore((s) => s.drawnStrokes)
+  const currentStroke    = useGameStore((s) => s.currentStroke)
+  const startStroke      = useGameStore((s) => s.startStroke)
+  const addPointToStroke = useGameStore((s) => s.addPointToStroke)
+  const endStroke        = useGameStore((s) => s.endStroke)
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    drawStrokes(canvas, drawnStrokes, currentStroke, CANVAS_W, CANVAS_H)
-  }, [drawnStrokes, currentStroke, CANVAS_W, CANVAS_H])
+    redraw(canvas, drawnStrokes, currentStroke, size.w, size.h)
+  }, [drawnStrokes, currentStroke, size])
 
-  const getNormalized = (e: React.PointerEvent): Point => {
+  const getNorm = (e: React.PointerEvent): Point => {
     const rect = canvasRef.current!.getBoundingClientRect()
     return {
-      x: Math.max(0, Math.min(1, (e.clientX - rect.left) / CANVAS_W)),
-      y: Math.max(0, Math.min(1, (e.clientY - rect.top)  / CANVAS_H)),
+      x: Math.max(0, Math.min(1, (e.clientX - rect.left) / size.w)),
+      y: Math.max(0, Math.min(1, (e.clientY - rect.top)  / size.h)),
     }
   }
 
-  const handlePointerDown = (e: React.PointerEvent) => {
+  const onDown = (e: React.PointerEvent) => {
     isDrawing.current = true
-    const pt = getNormalized(e)
+    const pt = getNorm(e)
     lastPt.current = pt
     startStroke()
     addPointToStroke(pt)
     canvasRef.current?.setPointerCapture(e.pointerId)
   }
 
-  const handlePointerMove = (e: React.PointerEvent) => {
+  const onMove = (e: React.PointerEvent) => {
     if (!isDrawing.current) return
-    const pt = getNormalized(e)
+    const pt = getNorm(e)
     if (lastPt.current) {
-      const threshold = 3 / CANVAS_W
+      const thr = 3 / size.w
       const dx = pt.x - lastPt.current.x
       const dy = pt.y - lastPt.current.y
-      if (dx * dx + dy * dy < threshold * threshold) return
+      if (dx * dx + dy * dy < thr * thr) return
     }
     lastPt.current = pt
     addPointToStroke(pt)
   }
 
-  const handlePointerUp = () => {
+  const onUp = () => {
     isDrawing.current = false
     lastPt.current    = null
     endStroke()
   }
 
-  const handlePointerLeave = () => {
-    if (isDrawing.current) {
-      isDrawing.current = false
-      lastPt.current    = null
-      endStroke()
-    }
+  const onLeave = () => {
+    if (isDrawing.current) { isDrawing.current = false; lastPt.current = null; endStroke() }
   }
 
-  const handleExpandToggle = () => {
-    const total = drawnStrokes.reduce((s, st) => s + st.length, 0)
-    if (total > 0) {
-      if (!window.confirm('확대/축소하면 현재 그림이 지워져요. 계속할까요?')) return
-      clearDrawnStrokes()
-    }
-    setIsExpanded((v) => !v)
-  }
-
-  const totalPoints = drawnStrokes.reduce((s, st) => s + st.length, 0) + currentStroke.length
+  const empty = drawnStrokes.length === 0 && currentStroke.length === 0
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {/* 컨트롤 바 */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={handleExpandToggle}
-          className="transition-colors"
-          style={{
-            padding: '5px 10px',
-            borderRadius: 'var(--radius-sm)',
-            fontSize: 11,
-            fontWeight: 500,
-            background: isExpanded ? 'var(--accent-soft)' : 'var(--bg)',
-            color: isExpanded ? 'var(--accent)' : 'var(--text-muted)',
-            border: 'none',
-            cursor: 'pointer',
-          }}
-        >
-          {isExpanded ? '축소' : '크게'}
-        </button>
-        <button
-          onClick={clearDrawnStrokes}
-          style={{
-            fontSize: 11,
-            color: 'var(--text-subtle)',
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '4px 8px',
-          }}
-        >
-          지우기
-        </button>
-      </div>
-
-      {/* 캔버스 */}
+    <div ref={containerRef} style={{ width: '100%' }}>
       <canvas
         ref={canvasRef}
-        width={CANVAS_W}
-        height={CANVAS_H}
+        width={size.w}
+        height={size.h}
         style={{
           display: 'block',
-          borderRadius: 'var(--radius-md)',
-          border: '1px solid var(--border)',
+          width: '100%',
+          borderRadius: 'var(--radius-lg)',
+          border: '1.5px dashed var(--border-strong)',
           backgroundColor: 'var(--bg)',
           cursor: 'crosshair',
           touchAction: 'none',
         }}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerLeave}
+        onPointerDown={onDown}
+        onPointerMove={onMove}
+        onPointerUp={onUp}
+        onPointerLeave={onLeave}
       />
-
-      {totalPoints === 0 && (
-        <p
-          style={{
-            fontSize: 11,
-            color: 'var(--text-subtle)',
-            textAlign: 'center',
-          }}
-        >
-          마우스로 모양을 그려보세요
+      {empty && (
+        <p style={{ fontSize: 11, color: 'var(--text-subtle)', textAlign: 'center', marginTop: 8 }}>
+          손가락이나 마우스로 그려보세요
         </p>
       )}
     </div>

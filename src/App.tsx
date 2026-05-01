@@ -3,10 +3,8 @@ import GameHUD from './components/ui/GameHUD'
 
 export default function App() {
   return (
-    <div
-      className="w-screen h-screen relative overflow-hidden"
-      style={{ background: '#F5EFE4' }}
-    >
+    // 풀스크린: 3D 씬이 배경, UI가 위에 떠있음
+    <div style={{ position: 'fixed', inset: 0, background: 'var(--bg)' }}>
       <Scene />
       <GameHUD />
     </div>
