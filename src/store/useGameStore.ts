@@ -35,7 +35,7 @@ interface GameStore {
 
   // ── 사용자 설정 ──────────────────────────────────
   poopSize: number      // 똥 크기 배율 (0.5 ~ 2.0)
-  poopSpacing: number   // 경로 점 간격 (0.08 ~ 0.30)
+  poopSpacing: number   // 경로 점 간격 (0.05 ~ 0.20)
 
   // ── actions ─────────────────────────────────────
   setSelectedVariant: (variantId: string) => void
@@ -62,7 +62,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   poops: [],
 
   poopSize: 1.0,
-  poopSpacing: 0.15,
+  poopSpacing: 0.10,
 
   // ── 햄스터 ──────────────────────────────────────
   setSelectedVariant: (variantId) => {

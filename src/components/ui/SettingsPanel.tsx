@@ -56,13 +56,13 @@ export default function SettingsPanel() {
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-xs text-gray-600">📏 똥 간격</label>
-              <span className="text-xs font-semibold text-pink-600">{poopSpacing.toFixed(2)}</span>
+              <span className="text-xs font-semibold text-pink-600">{poopSpacing.toFixed(3)}</span>
             </div>
             <input
               type="range"
-              min="0.08"
-              max="0.30"
-              step="0.01"
+              min="0.05"
+              max="0.20"
+              step="0.005"
               value={poopSpacing}
               onChange={(e) => setPoopSpacing(parseFloat(e.target.value))}
               className="w-full"
@@ -78,19 +78,19 @@ export default function SettingsPanel() {
             <p className="text-[11px] text-gray-500 mb-1.5">빠른 설정</p>
             <div className="flex gap-1.5">
               <button
-                onClick={() => applyPreset(0.7, 0.10)}
+                onClick={() => applyPreset(0.7, 0.06)}
                 className="flex-1 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs text-gray-700 transition"
               >
                 🌾 깔끔
               </button>
               <button
-                onClick={() => applyPreset(1.0, 0.15)}
+                onClick={() => applyPreset(1.0, 0.10)}
                 className="flex-1 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs text-gray-700 transition"
               >
                 🐹 기본
               </button>
               <button
-                onClick={() => applyPreset(1.5, 0.25)}
+                onClick={() => applyPreset(1.5, 0.16)}
                 className="flex-1 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs text-gray-700 transition"
               >
                 💩 빅
