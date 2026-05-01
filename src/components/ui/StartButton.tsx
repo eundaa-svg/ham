@@ -2,24 +2,26 @@ import { useGameStore } from '../../store/useGameStore'
 import { sampleDrawnPath } from '../../lib/pathSampler'
 
 export default function StartButton() {
-  const phase       = useGameStore((s) => s.phase)
-  const drawnPoints = useGameStore((s) => s.drawnPoints)
-  const hamsters    = useGameStore((s) => s.hamsters)
-  const poopSpacing = useGameStore((s) => s.poopSpacing)  // 설정값 반영
+  const phase        = useGameStore((s) => s.phase)
+  const drawnStrokes = useGameStore((s) => s.drawnStrokes)
+  const hamsters     = useGameStore((s) => s.hamsters)
+  const poopSpacing  = useGameStore((s) => s.poopSpacing)
 
-  const setPhase        = useGameStore((s) => s.setPhase)
-  const setComputedPath = useGameStore((s) => s.setComputedPath)
-  const clearPoops      = useGameStore((s) => s.clearPoops)
-  const reset           = useGameStore((s) => s.reset)
+  const setPhase               = useGameStore((s) => s.setPhase)
+  const setComputedPath        = useGameStore((s) => s.setComputedPath)
+  const clearPoops             = useGameStore((s) => s.clearPoops)
+  const reset                  = useGameStore((s) => s.reset)
+  const setInputPanelCollapsed = useGameStore((s) => s.setInputPanelCollapsed)
 
-  const hasInput = drawnPoints.length >= 5
+  const totalPoints = drawnStrokes.reduce((sum, s) => sum + s.length, 0)
+  const hasInput    = totalPoints >= 5
 
   const handleStart = () => {
     clearPoops()
 
-    const path = sampleDrawnPath(drawnPoints, poopSpacing)
+    const path = sampleDrawnPath(drawnStrokes, poopSpacing)
 
-    console.log('[DEBUG] 드로잉 점 수:', drawnPoints.length)
+    console.log('[DEBUG] 스트로크 수:', drawnStrokes.length)
     console.log('[DEBUG] 경로 점 수:', path.length, '/ spacing:', poopSpacing)
 
     if (path.length === 0) {
@@ -29,6 +31,7 @@ export default function StartButton() {
 
     setComputedPath(path)
     setPhase('pooping')
+    setInputPanelCollapsed(true)   // 시작과 동시에 패널 자동 접기
   }
 
   if (phase === 'pooping') {
