@@ -9,22 +9,12 @@ interface HamsterProps {
   initialPosition?: [number, number, number]
 }
 
-const MODEL_PATH   = '/models/golden_ham.glb'
-const BUTT_OFFSET  = 0.6   // 엉덩이까지 거리 (월드 단위)
+const MODEL_PATH = '/models/golden_ham.glb'
 
 function pickNewTarget(target: THREE.Vector3) {
   const angle  = Math.random() * Math.PI * 2
   const radius = 1.5 + Math.random() * 3.5
   target.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius)
-}
-
-// 햄스터 엉덩이 위치 계산 (진행 방향 반대)
-function getButtPosition(pos: THREE.Vector3, rotY: number): [number, number, number] {
-  return [
-    pos.x - Math.sin(rotY) * BUTT_OFFSET,
-    0.06,
-    pos.z - Math.cos(rotY) * BUTT_OFFSET,
-  ]
 }
 
 export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: HamsterProps) {
@@ -107,53 +97,22 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
         return
       }
 
-      const tp      = path[pathIndexRef.current]
-      const nextIdx = Math.min(pathIndexRef.current + 1, path.length - 1)
-      const nextTp  = path[nextIdx]
+      const tp = path[pathIndexRef.current]
 
-      // 다음 점 방향으로 BUTT_OFFSET만큼 앞선 위치를 목표로 삼음
-      // → 엉덩이가 tp 위치를 지날 때 똥이 정확히 경로 위에 찍힘
-      const moveDir = new THREE.Vector3(
-        nextTp.x - tp.x,
-        0,
-        nextTp.z - tp.z,
-      )
-      if (moveDir.length() > 0.001) moveDir.normalize()
-
-      targetVec.current.set(
-        tp.x + moveDir.x * BUTT_OFFSET,
-        0,
-        tp.z + moveDir.z * BUTT_OFFSET,
-      )
-
+      // 햄스터는 정확히 path point를 향해 이동
+      targetVec.current.set(tp.x, 0, tp.z)
       dirVec.current.subVectors(targetVec.current, pos)
       dirVec.current.y = 0
       const dist = dirVec.current.length()
 
-      if (dist < 0.15) {
-        console.log(`[DEBUG] 점 ${pathIndexRef.current}/${path.length} 도착`)
-        stuckTimerRef.current = 0
-
-        // 엉덩이(진행 방향 반대) 위치에 똥 spawn
-        const buttPos = getButtPosition(pos, group.rotation.y)
-        useGameStore.getState().addPoop({
-          id: `poop-${Date.now()}-${Math.random()}`,
-          position: buttPos,
-          rotation: Math.random() * Math.PI * 2,
-          spawnedAt: performance.now(),
-        })
-        pathIndexRef.current++
-        return
-      }
-
-      // stuck 타임아웃
+      // stuck 타임아웃 (3초)
       stuckTimerRef.current += delta
-      if (stuckTimerRef.current > 2) {
+      if (stuckTimerRef.current > 3) {
         console.warn(`[DEBUG] stuck! 강제 진행: 점 ${pathIndexRef.current}`)
-        const buttPos = getButtPosition(pos, group.rotation.y)
+        // 똥은 정확히 path point 위치에
         useGameStore.getState().addPoop({
           id: `poop-stuck-${Date.now()}`,
-          position: buttPos,
+          position: [tp.x, 0.06, tp.z],
           rotation: Math.random() * Math.PI * 2,
           spawnedAt: performance.now(),
         })
@@ -162,9 +121,25 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
         return
       }
 
+      // 도착 판정 (0.10으로 빡빡하게)
+      if (dist < 0.10) {
+        console.log(`[DEBUG] 점 ${pathIndexRef.current}/${path.length} 도착`)
+        stuckTimerRef.current = 0
+        // 똥은 햄스터 현재 위치가 아닌 정확히 path point 위치에
+        useGameStore.getState().addPoop({
+          id: `poop-${Date.now()}-${Math.random()}`,
+          position: [tp.x, 0.06, tp.z],
+          rotation: Math.random() * Math.PI * 2,
+          spawnedAt: performance.now(),
+        })
+        pathIndexRef.current++
+        return
+      }
+
+      // 이동 (속도 2.0으로 오버슈팅 방지)
       dirVec.current.normalize()
-      pos.x += dirVec.current.x * 2.5 * delta
-      pos.z += dirVec.current.z * 2.5 * delta
+      pos.x += dirVec.current.x * 2.0 * delta
+      pos.z += dirVec.current.z * 2.0 * delta
       pos.y  = Math.abs(Math.sin(t * 12)) * 0.04
       group.rotation.y = Math.atan2(dirVec.current.x, dirVec.current.z)
       return
