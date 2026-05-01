@@ -180,8 +180,8 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
     <group ref={groupRef} position={initialPosition}>
       <primitive
         object={clonedScene}
-        scale={[3, 3, 3]}
-        position={[0, 0.3, 0]}   // 바닥 묻힘 방지용 y 오프셋
+        scale={[6, 6, 6]}
+        position={[0, 0.5, 0]}   // 바닥 묻힘 방지용 y 오프셋
       />
     </group>
   )
