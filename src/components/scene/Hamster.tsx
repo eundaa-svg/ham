@@ -1,8 +1,7 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { RoundedBox } from '@react-three/drei'
+import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
-import { HAMSTER_VARIANTS } from '../../lib/hamsterTypes'
 import { useGameStore } from '../../store/useGameStore'
 
 interface HamsterProps {
@@ -10,172 +9,51 @@ interface HamsterProps {
   initialPosition?: [number, number, number]
 }
 
+const MODEL_PATH = '/models/golden_ham.glb'
+
 function pickNewTarget(target: THREE.Vector3) {
   const angle  = Math.random() * Math.PI * 2
   const radius = 1.5 + Math.random() * 3.5
   target.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius)
 }
 
-// ── 메쉬: 네모난 박스형 인형 햄스터 ────────────────────────────────
-function HamsterMesh({ variant }: { variant: (typeof HAMSTER_VARIANTS)[0] }) {
-  const { bodyColor, bellyColor, faceColor, hasPatch } = variant
-
-  return (
-    <>
-      {/* 바디 — 큰 둥근 박스 */}
-      <RoundedBox
-        args={[1.0, 0.95, 1.15]}
-        radius={0.35}
-        smoothness={6}
-        position={[0, 0.5, 0]}
-        castShadow
-        receiveShadow
-      >
-        <meshStandardMaterial color={bodyColor} roughness={0.95} metalness={0} />
-      </RoundedBox>
-
-      {/* 얼굴 면 — 앞쪽에 살짝 밝은 패널 */}
-      <RoundedBox
-        args={[0.82, 0.68, 0.05]}
-        radius={0.3}
-        smoothness={4}
-        position={[0, 0.58, 0.6]}
-      >
-        <meshStandardMaterial color={faceColor} roughness={0.95} metalness={0} />
-      </RoundedBox>
-
-      {/* 배 */}
-      <RoundedBox
-        args={[0.65, 0.46, 0.05]}
-        radius={0.22}
-        smoothness={4}
-        position={[0, 0.24, 0.6]}
-      >
-        <meshStandardMaterial color={bellyColor} roughness={0.95} metalness={0} />
-      </RoundedBox>
-
-      {/* 귀 왼쪽 바깥 */}
-      <mesh position={[-0.34, 1.0, 0.08]} rotation={[0.1, 0, -0.15]} castShadow>
-        <sphereGeometry args={[0.17, 16, 16]} />
-        <meshStandardMaterial color={bodyColor} roughness={0.95} metalness={0} />
-      </mesh>
-      {/* 귀 왼쪽 안쪽 (분홍) */}
-      <mesh position={[-0.33, 1.0, 0.18]} rotation={[0.1, 0, -0.15]}>
-        <sphereGeometry args={[0.10, 12, 12]} />
-        <meshStandardMaterial color="#F4A8A8" roughness={0.9} metalness={0} />
-      </mesh>
-
-      {/* 귀 오른쪽 바깥 */}
-      <mesh position={[0.34, 1.0, 0.08]} rotation={[0.1, 0, 0.15]} castShadow>
-        <sphereGeometry args={[0.17, 16, 16]} />
-        <meshStandardMaterial color={bodyColor} roughness={0.95} metalness={0} />
-      </mesh>
-      {/* 귀 오른쪽 안쪽 (분홍) */}
-      <mesh position={[0.33, 1.0, 0.18]} rotation={[0.1, 0, 0.15]}>
-        <sphereGeometry args={[0.10, 12, 12]} />
-        <meshStandardMaterial color="#F4A8A8" roughness={0.9} metalness={0} />
-      </mesh>
-
-      {/* 눈 왼쪽 */}
-      <mesh position={[-0.22, 0.65, 0.66]}>
-        <sphereGeometry args={[0.075, 16, 16]} />
-        <meshStandardMaterial color="#181818" roughness={0.2} metalness={0.4} />
-      </mesh>
-      {/* 눈 왼쪽 하이라이트 */}
-      <mesh position={[-0.20, 0.675, 0.725]}>
-        <sphereGeometry args={[0.024, 8, 8]} />
-        <meshStandardMaterial
-          color="#FFFFFF"
-          roughness={0.05}
-          emissive="#FFFFFF"
-          emissiveIntensity={0.4}
-        />
-      </mesh>
-
-      {/* 눈 오른쪽 */}
-      <mesh position={[0.22, 0.65, 0.66]}>
-        <sphereGeometry args={[0.075, 16, 16]} />
-        <meshStandardMaterial color="#181818" roughness={0.2} metalness={0.4} />
-      </mesh>
-      {/* 눈 오른쪽 하이라이트 */}
-      <mesh position={[0.24, 0.675, 0.725]}>
-        <sphereGeometry args={[0.024, 8, 8]} />
-        <meshStandardMaterial
-          color="#FFFFFF"
-          roughness={0.05}
-          emissive="#FFFFFF"
-          emissiveIntensity={0.4}
-        />
-      </mesh>
-
-      {/* 코 */}
-      <mesh position={[0, 0.485, 0.71]}>
-        <sphereGeometry args={[0.052, 12, 12]} />
-        <meshStandardMaterial color="#D88080" roughness={0.65} metalness={0} />
-      </mesh>
-
-      {/* 입 주변 흰 부분 */}
-      <RoundedBox
-        args={[0.26, 0.17, 0.03]}
-        radius={0.08}
-        smoothness={4}
-        position={[0, 0.385, 0.67]}
-      >
-        <meshStandardMaterial color="#FFFAF5" roughness={0.95} metalness={0} />
-      </RoundedBox>
-
-      {/* 볼 왼쪽 (반투명 분홍) */}
-      <mesh position={[-0.36, 0.50, 0.56]}>
-        <sphereGeometry args={[0.13, 12, 12]} />
-        <meshStandardMaterial
-          color="#F5C0BC"
-          roughness={0.95}
-          transparent
-          opacity={0.45}
-        />
-      </mesh>
-      {/* 볼 오른쪽 */}
-      <mesh position={[0.36, 0.50, 0.56]}>
-        <sphereGeometry args={[0.13, 12, 12]} />
-        <meshStandardMaterial
-          color="#F5C0BC"
-          roughness={0.95}
-          transparent
-          opacity={0.45}
-        />
-      </mesh>
-
-      {/* 삼색이 등 패치 */}
-      {hasPatch && (
-        <RoundedBox
-          args={[0.55, 0.05, 0.68]}
-          radius={0.1}
-          smoothness={4}
-          position={[0, 0.98, -0.08]}
-        >
-          <meshStandardMaterial color="#FFFFFF" roughness={0.95} metalness={0} />
-        </RoundedBox>
-      )}
-    </>
-  )
-}
-
-// ── 이동 로직 ────────────────────────────────────────────────────
 export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: HamsterProps) {
-  const variant = HAMSTER_VARIANTS.find((v) => v.id === variantId) ?? HAMSTER_VARIANTS[0]
+  const { scene } = useGLTF(MODEL_PATH)
 
+  // 여러 인스턴스가 같은 GLB를 공유할 수 있도록 clone
+  const clonedScene = useMemo(() => {
+    const cloned = scene.clone(true)
+    cloned.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        child.castShadow    = true
+        child.receiveShadow = true
+      }
+    })
+    return cloned
+  }, [scene])
+
+  useEffect(() => {
+    console.log('[GLB] 모델 로드 완료:', MODEL_PATH)
+    console.log('[GLB] scene 객체:', scene)
+    console.log('[GLB] 최상위 자식 수:', scene.children.length)
+  }, [scene])
+
+  // ── 이동 refs ──────────────────────────────────────────────────
   const groupRef  = useRef<THREE.Group>(null!)
   const dirVec    = useRef(new THREE.Vector3())
   const targetVec = useRef(new THREE.Vector3())
 
+  // wander
   const wanderTarget  = useRef(new THREE.Vector3())
   const isIdleRef     = useRef(false)
   const idleTimerRef  = useRef(0)
 
+  // pooping
   const pathIndexRef  = useRef(0)
   const missionDone   = useRef(false)
   const stuckTimerRef = useRef(0)
 
+  // store 값 ref 캐싱 (useFrame 클로저 문제 방지)
   const phaseRef = useRef(useGameStore.getState().phase)
   const pathRef  = useRef(useGameStore.getState().computedPath)
 
@@ -185,6 +63,7 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
       phaseRef.current = s.phase
       pathRef.current  = s.computedPath
 
+      // idle → pooping 전환 순간에만 리셋 (addPoop 때마다 리셋되는 버그 방지)
       if (s.phase === 'pooping' && prevPhase !== 'pooping') {
         console.log('[DEBUG] pooping 시작, 경로 점 수:', s.computedPath.length)
         pathIndexRef.current  = 0
@@ -201,6 +80,7 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
     return unsub
   }, [])
 
+  // 마운트 시 초기 위치 + wander 첫 목적지
   useEffect(() => {
     groupRef.current.position.set(...initialPosition)
     pickNewTarget(wanderTarget.current)
@@ -212,7 +92,7 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
     const pos = group.position
     const t   = state.clock.elapsedTime
 
-    // ══ POOPING ══════════════════════════════════════════════════
+    // ══ POOPING ════════════════════════════════════════════════
     if (phaseRef.current === 'pooping') {
       if (missionDone.current) return
 
@@ -265,7 +145,7 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
       return
     }
 
-    // ══ WANDER ════════════════════════════════════════════════════
+    // ══ WANDER ═════════════════════════════════════════════════
     if (isIdleRef.current) {
       idleTimerRef.current -= delta
       pos.y = Math.sin(t * 4) * 0.02
@@ -297,8 +177,14 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
   })
 
   return (
-    <group ref={groupRef} scale={[0.5, 0.5, 0.5]}>
-      <HamsterMesh variant={variant} />
+    <group ref={groupRef} position={initialPosition}>
+      <primitive
+        object={clonedScene}
+        scale={[1, 1, 1]}   // 크기 이상하면 조정 필요
+      />
     </group>
   )
 }
+
+// 앱 시작 시 미리 로드
+useGLTF.preload(MODEL_PATH)

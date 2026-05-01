@@ -51,7 +51,10 @@ export default function Scene() {
       </Suspense>
 
       <Ground />
-      <HamsterSwarm />
+      {/* GLB 로딩 중 에러 방지용 Suspense */}
+      <Suspense fallback={null}>
+        <HamsterSwarm />
+      </Suspense>
       <PoopField />
 
       {/* 발 밑 부드러운 그림자 */}
