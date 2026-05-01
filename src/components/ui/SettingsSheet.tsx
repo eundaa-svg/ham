@@ -5,11 +5,8 @@ interface Props { onClose: () => void }
 export default function SettingsSheet({ onClose }: Props) {
   const poopSize       = useGameStore((s) => s.poopSize)
   const poopSpacing    = useGameStore((s) => s.poopSpacing)
-  const poops          = useGameStore((s) => s.poops)
   const setPoopSize    = useGameStore((s) => s.setPoopSize)
   const setPoopSpacing = useGameStore((s) => s.setPoopSpacing)
-  const clearPoops     = useGameStore((s) => s.clearPoops)
-  const reset          = useGameStore((s) => s.reset)
 
   return (
     <>
@@ -41,7 +38,7 @@ export default function SettingsSheet({ onClose }: Props) {
 
         {/* 제목 */}
         <div style={{ padding: '4px 20px 16px' }}>
-          <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)' }}>설정</h3>
+          <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)' }}>똥 설정</h3>
         </div>
 
         <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -74,28 +71,9 @@ export default function SettingsSheet({ onClose }: Props) {
               <span>촘촘</span><span>듬성</span>
             </div>
           </div>
-
-          {/* 치우기 */}
-          {poops.length > 0 && (
-            <button
-              onClick={() => { clearPoops(); reset(); onClose() }}
-              style={{
-                padding: '12px',
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--bg)',
-                border: '1px solid var(--border)',
-                fontSize: 13,
-                color: 'var(--text-muted)',
-                marginBottom: 8,
-              }}
-            >
-              똥 모두 치우기
-            </button>
-          )}
         </div>
 
-        {/* 여백 */}
-        <div style={{ height: 16 }} />
+        <div style={{ height: 24 }} />
       </div>
     </>
   )

@@ -124,13 +124,24 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
       dirVec.current.y = 0
       const dist = dirVec.current.length()
 
+      // 엉덩이 위치 계산 헬퍼 (하이브리드: 엉덩이 vs targetPoint)
+      const getButtOrTarget = (): [number, number] => {
+        const rotY = group.rotation.y
+        const OFFSET = 0.45
+        const bx = pos.x - Math.sin(rotY) * OFFSET
+        const bz = pos.z - Math.cos(rotY) * OFFSET
+        const d2 = Math.sqrt((bx - tp.x) ** 2 + (bz - tp.z) ** 2)
+        return d2 < 0.3 ? [bx, bz] : [tp.x, tp.z]
+      }
+
       // stuck 타임아웃 (3초)
       stuckTimerRef.current += delta
       if (stuckTimerRef.current > 3) {
         console.warn(`[DEBUG] stuck! 강제 진행: 점 ${pathIndexRef.current}`)
+        const [fx, fz] = getButtOrTarget()
         useGameStore.getState().addPoop({
           id: `poop-stuck-${Date.now()}`,
-          position: [tp.x, 0.06, tp.z],
+          position: [fx, 0.06, fz],
           rotation: Math.random() * Math.PI * 2,
           foodId: useGameStore.getState().selectedFoodId,
           spawnedAt: performance.now(),
@@ -140,13 +151,14 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
         return
       }
 
-      // 도착
-      if (dist < 0.10) {
+      // 도착 (0.08로 빡빡하게)
+      if (dist < 0.08) {
         console.log(`[DEBUG] 점 ${pathIndexRef.current}/${path.length} 도착`)
         stuckTimerRef.current = 0
+        const [fx, fz] = getButtOrTarget()
         useGameStore.getState().addPoop({
           id: `poop-${Date.now()}-${Math.random()}`,
-          position: [tp.x, 0.06, tp.z],
+          position: [fx, 0.06, fz],
           rotation: Math.random() * Math.PI * 2,
           foodId: useGameStore.getState().selectedFoodId,
           spawnedAt: performance.now(),
