@@ -4,13 +4,12 @@ import type { PathPoint } from '../store/useGameStore'
 // ── 드로잉 경로 샘플링 ────────────────────────────────────────────
 export function sampleDrawnPath(
   rawPoints: { x: number; y: number }[],
-  spacing = 0.18
+  spacing = 0.15
 ): PathPoint[] {
   if (rawPoints.length < 2) return []
 
   const worldPts = rawPoints.map((p) => canvasToWorld(p.x, p.y))
 
-  // 누적 거리 기반 등간격 샘플링
   const result: PathPoint[] = [worldPts[0]]
   let accumulated = 0
 
@@ -30,8 +29,8 @@ export function sampleDrawnPath(
 }
 
 // ── 텍스트 경로 샘플링 ────────────────────────────────────────────
-// 오프스크린 캔버스에 텍스트 렌더링 → 어두운 픽셀 추출 → 3D 좌표 변환
-export function sampleTextPath(text: string, spacing = 0.18): PathPoint[] {
+// strokeText로 외곽선만 추출 → 내부 채우기 없이 글자 윤곽을 따라 이동
+export function sampleTextPath(text: string, spacing = 0.15): PathPoint[] {
   if (!text.trim()) return []
 
   const W = 800
@@ -43,22 +42,25 @@ export function sampleTextPath(text: string, spacing = 0.18): PathPoint[] {
 
   ctx.fillStyle = 'white'
   ctx.fillRect(0, 0, W, H)
-  ctx.fillStyle = 'black'
-  ctx.textAlign     = 'center'
-  ctx.textBaseline  = 'middle'
-  ctx.font = 'bold 130px sans-serif'
-  ctx.fillText(text, W / 2, H / 2)
+
+  // fillText 대신 strokeText: 글자 외곽선만 그림 → 경로가 윤곽을 따라감
+  ctx.strokeStyle  = 'black'
+  ctx.lineWidth    = 8          // 외곽선 두께 (픽셀 샘플링이 잘 되도록)
+  ctx.textAlign    = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.font         = 'bold 140px sans-serif'
+  ctx.strokeText(text, W / 2, H / 2)
 
   const { data } = ctx.getImageData(0, 0, W, H)
 
-  // 3px 간격으로 샘플링 (기존 4 → 3, 더 촘촘)
-  const STEP = 3
+  // 2px 간격으로 어두운 픽셀 수집
+  const STEP = 2
   const rawPts: PathPoint[] = []
 
   for (let y = 0; y < H; y += STEP) {
     for (let x = 0; x < W; x += STEP) {
       const r = data[(y * W + x) * 4]
-      if (r < 80) {
+      if (r < 100) {
         rawPts.push({
           x: (x / W - 0.5) * 5.5,
           z: (y / H - 0.5) * 1.8,
@@ -69,7 +71,7 @@ export function sampleTextPath(text: string, spacing = 0.18): PathPoint[] {
 
   if (rawPts.length === 0) return []
 
-  // 위→아래, 좌→우 순 정렬 (글자를 순서대로 따라가게)
+  // 위→아래, 좌→우 순 정렬
   rawPts.sort((a, b) => a.z - b.z || a.x - b.x)
 
   // spacing 기반 다운샘플링

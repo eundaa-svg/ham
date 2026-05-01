@@ -17,21 +17,28 @@ export default function StartButton() {
     inputMode === 'text' ? textInput.trim().length > 0 : drawnPoints.length >= 5
 
   const handleStart = () => {
-    // 이전 똥 제거 후 경로 계산
     clearPoops()
 
     const path =
       inputMode === 'text'
-        ? sampleTextPath(textInput, 0.18)      // 촘촘한 spacing
-        : sampleDrawnPath(drawnPoints, 0.18)
+        ? sampleTextPath(textInput, 0.15)
+        : sampleDrawnPath(drawnPoints, 0.15)
 
-    if (path.length === 0) return
+    console.log('[DEBUG] 입력 모드:', inputMode)
+    console.log('[DEBUG] 원본 입력:', inputMode === 'text' ? textInput : `${drawnPoints.length}개 점`)
+    console.log('[DEBUG] 계산된 경로 점 개수:', path.length)
+    console.log('[DEBUG] 첫 5개 점:', path.slice(0, 5))
+    console.log('[DEBUG] 마지막 5개 점:', path.slice(-5))
+
+    if (path.length === 0) {
+      console.error('[DEBUG] 경로가 비어있음!')
+      return
+    }
 
     setComputedPath(path)
     setPhase('pooping')
   }
 
-  // ── pooping 중: 중단 버튼 ────────────────────────────────────
   if (phase === 'pooping') {
     return (
       <button
@@ -43,7 +50,6 @@ export default function StartButton() {
     )
   }
 
-  // ── idle / completed ─────────────────────────────────────────
   return (
     <div className="flex flex-col items-end gap-2">
       <button
