@@ -5,36 +5,29 @@ import DrawingCanvas from './DrawingCanvas'
 export default function BottomToolbar() {
   const [isExpanded, setIsExpanded] = useState(true)
 
-  const drawnStrokes     = useGameStore((s) => s.drawnStrokes)
+  const drawnStrokes      = useGameStore((s) => s.drawnStrokes)
   const clearDrawnStrokes = useGameStore((s) => s.clearDrawnStrokes)
   const totalPoints = drawnStrokes.reduce((sum, s) => sum + s.length, 0)
 
   return (
     <div style={{
-      borderRadius: 'var(--radius-lg)',
+      borderRadius: 'var(--r-lg)',
       overflow: 'hidden',
-      background: 'var(--surface-elev)',
-      boxShadow: 'var(--shadow-md)',
-      border: '1px solid var(--border)',
+      background: 'var(--surface)',
+      border: '1px solid var(--line)',
+      boxShadow: 'var(--shadow-sm)',
     }}>
       {/* 헤더 */}
       <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '10px 14px',
+        borderBottom: isExpanded ? '1px solid var(--line)' : 'none',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>그리기</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className="t-caption">Canvas</span>
           {drawnStrokes.length > 0 && (
-            <span style={{
-              fontSize: 10, fontWeight: 600,
-              padding: '2px 7px',
-              borderRadius: 'var(--radius-pill)',
-              background: 'var(--accent-soft)',
-              color: 'var(--accent)',
-            }}>
-              {drawnStrokes.length}획
+            <span className="t-mono" style={{ fontSize: 11, color: 'var(--text)', fontWeight: 600 }}>
+              {String(drawnStrokes.length).padStart(2, '0')}
             </span>
           )}
         </div>
@@ -43,31 +36,20 @@ export default function BottomToolbar() {
           {totalPoints > 0 && (
             <button
               onClick={clearDrawnStrokes}
-              style={{
-                fontSize: 11, padding: '5px 10px',
-                borderRadius: 'var(--radius-sm)',
-                color: 'var(--text-muted)',
-                background: 'transparent', border: 'none',
-              }}
+              style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)', padding: '4px 8px', letterSpacing: '0.02em' }}
             >
-              지우기
+              Clear
             </button>
           )}
           <button
             onClick={() => setIsExpanded((v) => !v)}
-            aria-label={isExpanded ? '접기' : '펼치기'}
-            style={{
-              width: 28, height: 28,
-              borderRadius: 'var(--radius-sm)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'transparent', border: 'none',
-              color: 'var(--text-muted)',
-            }}
+            aria-label={isExpanded ? 'collapse' : 'expand'}
+            style={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
               <path
-                d={isExpanded ? 'M1 6l5-5 5 5' : 'M1 2l5 5 5-5'}
-                stroke="currentColor" strokeWidth="1.5"
+                d={isExpanded ? 'M2 6.5l3-3 3 3' : 'M2 3.5l3 3 3-3'}
+                stroke="var(--text-muted)" strokeWidth="1.4"
                 strokeLinecap="round" strokeLinejoin="round"
               />
             </svg>
@@ -77,10 +59,7 @@ export default function BottomToolbar() {
 
       {/* 캔버스 */}
       {isExpanded && (
-        <div style={{
-          borderTop: '1px solid var(--border)',
-          padding: '10px 12px 12px',
-        }}>
+        <div style={{ padding: '10px 12px 12px' }}>
           <DrawingCanvas />
         </div>
       )}

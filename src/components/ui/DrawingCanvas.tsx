@@ -3,20 +3,14 @@ import { useGameStore } from '../../store/useGameStore'
 
 interface Point { x: number; y: number }
 
-function redraw(
-  canvas: HTMLCanvasElement,
-  strokes: Point[][],
-  current: Point[],
-  w: number,
-  h: number,
-) {
+function redraw(canvas: HTMLCanvasElement, strokes: Point[][], current: Point[], w: number, h: number) {
   const ctx = canvas.getContext('2d')!
   ctx.clearRect(0, 0, w, h)
-  ctx.fillStyle = '#F2EBDD'
+  ctx.fillStyle = '#E8E0D0'   // --bg-soft
   ctx.fillRect(0, 0, w, h)
 
-  ctx.strokeStyle = '#3A2818'
-  ctx.lineWidth   = Math.max(2, w / 180)
+  ctx.strokeStyle = '#1A1614'  // --text
+  ctx.lineWidth   = Math.max(1.5, w / 220)
   ctx.lineCap     = 'round'
   ctx.lineJoin    = 'round'
 
@@ -44,7 +38,6 @@ export default function DrawingCanvas() {
 
   const [size, setSize] = useState({ w: 320, h: 200 })
 
-  // 컨테이너 너비에 맞춰 캔버스 크기 자동 조정
   useEffect(() => {
     const update = () => {
       if (!containerRef.current) return
@@ -100,15 +93,8 @@ export default function DrawingCanvas() {
     addPointToStroke(pt)
   }
 
-  const onUp = () => {
-    isDrawing.current = false
-    lastPt.current    = null
-    endStroke()
-  }
-
-  const onLeave = () => {
-    if (isDrawing.current) { isDrawing.current = false; lastPt.current = null; endStroke() }
-  }
+  const onUp = () => { isDrawing.current = false; lastPt.current = null; endStroke() }
+  const onLeave = () => { if (isDrawing.current) { isDrawing.current = false; lastPt.current = null; endStroke() } }
 
   const empty = drawnStrokes.length === 0 && currentStroke.length === 0
 
@@ -119,11 +105,10 @@ export default function DrawingCanvas() {
         width={size.w}
         height={size.h}
         style={{
-          display: 'block',
-          width: '100%',
-          borderRadius: 'var(--radius-lg)',
-          border: '1.5px dashed var(--border-strong)',
-          backgroundColor: 'var(--bg)',
+          display: 'block', width: '100%',
+          borderRadius: 'var(--r-md)',
+          border: '1px solid var(--line)',
+          backgroundColor: 'var(--bg-soft)',
           cursor: 'crosshair',
           touchAction: 'none',
         }}
@@ -133,8 +118,8 @@ export default function DrawingCanvas() {
         onPointerLeave={onLeave}
       />
       {empty && (
-        <p style={{ fontSize: 11, color: 'var(--text-subtle)', textAlign: 'center', marginTop: 8 }}>
-          손가락이나 마우스로 그려보세요
+        <p className="t-caption" style={{ textAlign: 'center', marginTop: 8 }}>
+          Draw something
         </p>
       )}
     </div>

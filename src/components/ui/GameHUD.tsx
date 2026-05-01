@@ -20,8 +20,8 @@ export default function GameHUD() {
         pointerEvents: 'none',
       }}>
         <div style={{
-          padding: 'max(16px, env(safe-area-inset-top)) 16px 16px',
-          background: 'linear-gradient(to bottom, var(--bg) 55%, transparent)',
+          padding: 'max(16px, env(safe-area-inset-top)) 20px 24px',
+          background: 'linear-gradient(to bottom, var(--bg) 50%, transparent)',
           pointerEvents: 'auto',
         }}>
           <TopBar
@@ -39,8 +39,8 @@ export default function GameHUD() {
         margin: '0 auto',
       }}>
         <div style={{
-          padding: '16px 16px max(16px, env(safe-area-inset-bottom))',
-          background: 'linear-gradient(to top, var(--bg) 65%, transparent)',
+          padding: '24px 20px max(20px, env(safe-area-inset-bottom))',
+          background: 'linear-gradient(to top, var(--bg) 70%, transparent)',
           pointerEvents: 'auto',
         }}>
           <BottomToolbar />
