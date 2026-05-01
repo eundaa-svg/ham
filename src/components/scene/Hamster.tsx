@@ -16,14 +16,12 @@ function pickNewTarget(target: THREE.Vector3) {
   target.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius)
 }
 
-// 각도를 -PI ~ PI 범위로 정규화 (항상 짧은 방향으로 회전)
 function normalizeAngle(angle: number): number {
   while (angle > Math.PI)  angle -= Math.PI * 2
   while (angle < -Math.PI) angle += Math.PI * 2
   return angle
 }
 
-// 부드러운 Y축 회전 적용
 function smoothRotateY(group: THREE.Group, targetAngle: number, speed: number, delta: number) {
   const diff = normalizeAngle(targetAngle - group.rotation.y)
   group.rotation.y += diff * Math.min(1, speed * delta)
@@ -31,7 +29,6 @@ function smoothRotateY(group: THREE.Group, targetAngle: number, speed: number, d
 
 function HamsterModel({ modelPath }: { modelPath: string }) {
   const { scene } = useGLTF(modelPath)
-
   const clonedScene = useMemo(() => {
     const cloned = scene.clone(true)
     cloned.traverse((child) => {
@@ -42,23 +39,16 @@ function HamsterModel({ modelPath }: { modelPath: string }) {
     })
     return cloned
   }, [scene])
-
-  return (
-    <primitive
-      object={clonedScene}
-      scale={[8, 8, 8]}
-      position={[0, 0.5, 0]}
-    />
-  )
+  return <primitive object={clonedScene} scale={[8, 8, 8]} position={[0, 0.5, 0]} />
 }
 
 export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: HamsterProps) {
   const variant = HAMSTER_VARIANTS.find((v) => v.id === variantId) ?? HAMSTER_VARIANTS[0]
 
-  const groupRef  = useRef<THREE.Group>(null!)
-  const dirVec    = useRef(new THREE.Vector3())
-  const targetVec = useRef(new THREE.Vector3())
-  const velocityRef = useRef(new THREE.Vector3())  // 관성용 속도 벡터
+  const groupRef    = useRef<THREE.Group>(null!)
+  const dirVec      = useRef(new THREE.Vector3())
+  const targetVec   = useRef(new THREE.Vector3())
+  const velocityRef = useRef(new THREE.Vector3())
 
   const wanderTarget  = useRef(new THREE.Vector3())
   const isIdleRef     = useRef(false)
@@ -68,15 +58,22 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
   const missionDone   = useRef(false)
   const stuckTimerRef = useRef(0)
 
+  // userTarget 관련 refs
+  const userTargetRef    = useRef<{ x: number; z: number } | null>(null)
+  const jumpStartRef     = useRef(-1)   // -1이면 점프 없음
+
   const phaseRef = useRef(useGameStore.getState().phase)
   const pathRef  = useRef(useGameStore.getState().computedPath)
 
   useEffect(() => {
     let prevPhase = useGameStore.getState().phase
+    let prevUserTarget = useGameStore.getState().userTarget
+
     const unsub = useGameStore.subscribe((s) => {
       phaseRef.current = s.phase
       pathRef.current  = s.computedPath
 
+      // pooping 전환 시 리셋
       if (s.phase === 'pooping' && prevPhase !== 'pooping') {
         console.log('[DEBUG] pooping 시작, 경로 점 수:', s.computedPath.length)
         pathIndexRef.current  = 0
@@ -84,12 +81,24 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
         isIdleRef.current     = false
         stuckTimerRef.current = 0
         velocityRef.current.set(0, 0, 0)
+        userTargetRef.current = null
         if (s.computedPath.length > 0 && groupRef.current) {
           const fp = s.computedPath[0]
           groupRef.current.position.set(fp.x - 0.3, 0, fp.z - 0.3)
         }
       }
       prevPhase = s.phase
+
+      // userTarget 새로 설정되면 ref 갱신 + 점프 트리거
+      if (s.userTarget !== prevUserTarget && s.userTarget !== null) {
+        userTargetRef.current = s.userTarget
+        jumpStartRef.current  = performance.now()
+        isIdleRef.current     = false   // idle 중단하고 바로 출발
+      }
+      if (s.userTarget === null) {
+        userTargetRef.current = null
+      }
+      prevUserTarget = s.userTarget
     })
     return unsub
   }, [])
@@ -124,7 +133,6 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
       dirVec.current.y = 0
       const dist = dirVec.current.length()
 
-      // 엉덩이 위치 계산 헬퍼 (하이브리드: 엉덩이 vs targetPoint)
       const getButtOrTarget = (): [number, number] => {
         const rotY = group.rotation.y
         const OFFSET = 0.45
@@ -134,7 +142,6 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
         return d2 < 0.3 ? [bx, bz] : [tp.x, tp.z]
       }
 
-      // stuck 타임아웃 (3초)
       stuckTimerRef.current += delta
       if (stuckTimerRef.current > 3) {
         console.warn(`[DEBUG] stuck! 강제 진행: 점 ${pathIndexRef.current}`)
@@ -151,7 +158,6 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
         return
       }
 
-      // 도착 (0.08로 빡빡하게)
       if (dist < 0.08) {
         console.log(`[DEBUG] 점 ${pathIndexRef.current}/${path.length} 도착`)
         stuckTimerRef.current = 0
@@ -167,19 +173,45 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
         return
       }
 
-      // 이동 — 관성 적용, y 고정
       dirVec.current.normalize()
-      const targetVel = dirVec.current.clone().multiplyScalar(2.0)
-      velocityRef.current.lerp(targetVel, Math.min(1, 8 * delta))
+      velocityRef.current.lerp(dirVec.current.clone().multiplyScalar(2.0), Math.min(1, 8 * delta))
       pos.x += velocityRef.current.x * delta
       pos.z += velocityRef.current.z * delta
-      // pos.y 건드리지 않음 (바닥 고정)
-
-      // 부드러운 회전
       smoothRotateY(group, Math.atan2(dirVec.current.x, dirVec.current.z), 10, delta)
-
-      // 이동 중 좌우 워들 (y 방향 아닌 z축 회전)
       group.rotation.z = Math.sin(t * 14) * 0.04
+      return
+    }
+
+    // ══ USER TARGET (사용자 클릭 이동) ═════════════════════════
+    const ut = userTargetRef.current
+    if (ut !== null) {
+      dirVec.current.set(ut.x - pos.x, 0, ut.z - pos.z)
+      const dist = dirVec.current.length()
+
+      if (dist < 0.15) {
+        // 도착 → userTarget 클리어, wander 복귀
+        useGameStore.getState().setUserTarget(null)
+        userTargetRef.current = null
+        isIdleRef.current     = false
+        pickNewTarget(wanderTarget.current)
+        velocityRef.current.set(0, 0, 0)
+        group.rotation.z = 0
+        return
+      }
+
+      dirVec.current.normalize()
+      velocityRef.current.lerp(dirVec.current.clone().multiplyScalar(2.0), Math.min(1, 6 * delta))
+      pos.x += velocityRef.current.x * delta
+      pos.z += velocityRef.current.z * delta
+
+      // 클릭 직후 살짝 점프
+      const jumpElapsed = jumpStartRef.current >= 0
+        ? (performance.now() - jumpStartRef.current) / 1000
+        : 999
+      pos.y = jumpElapsed < 0.3 ? Math.sin(jumpElapsed / 0.3 * Math.PI) * 0.1 : 0
+
+      smoothRotateY(group, Math.atan2(dirVec.current.x, dirVec.current.z), 10, delta)
+      group.rotation.z = Math.sin(t * 14) * 0.05
       return
     }
 
@@ -187,7 +219,7 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
     if (isIdleRef.current) {
       idleTimerRef.current -= delta
       velocityRef.current.lerp(new THREE.Vector3(0, 0, 0), Math.min(1, 6 * delta))
-      group.rotation.z = 0   // 멈추면 워들 제거
+      group.rotation.z = 0
       if (idleTimerRef.current <= 0) {
         isIdleRef.current = false
         pickNewTarget(wanderTarget.current)
@@ -208,18 +240,12 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
       return
     }
 
-    // 이동 — 관성 적용, y 고정
     dirVec.current.normalize()
-    const targetVel = dirVec.current.clone().multiplyScalar(1.5)
-    velocityRef.current.lerp(targetVel, Math.min(1, 6 * delta))
+    velocityRef.current.lerp(dirVec.current.clone().multiplyScalar(1.5), Math.min(1, 6 * delta))
     pos.x += velocityRef.current.x * delta
     pos.z += velocityRef.current.z * delta
-    // pos.y 건드리지 않음
-
-    // 부드러운 회전
+    pos.y  = 0
     smoothRotateY(group, Math.atan2(dirVec.current.x, dirVec.current.z), 8, delta)
-
-    // 이동 중 좌우 워들
     group.rotation.z = Math.sin(t * 12) * 0.035
   })
 

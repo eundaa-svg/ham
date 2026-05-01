@@ -4,6 +4,8 @@ import { Suspense } from 'react'
 import Ground from './Ground'
 import HamsterSwarm from './HamsterSwarm'
 import PoopField from './PoopField'
+import ClickableGround from './ClickableGround'
+import ClickRipple from './ClickRipple'
 
 export default function Scene() {
   return (
@@ -13,10 +15,7 @@ export default function Scene() {
       style={{ width: '100%', height: '100%' }}
       gl={{ antialias: true }}
     >
-      {/* 부드러운 기본 환경광 */}
       <ambientLight intensity={0.75} color="#FFF8F0" />
-
-      {/* 메인 디렉셔널 라이트 — 위 앞쪽에서 */}
       <directionalLight
         position={[3, 8, 5]}
         intensity={0.9}
@@ -30,41 +29,23 @@ export default function Scene() {
         shadow-camera-bottom={-6}
         color="#FFF5E8"
       />
+      <directionalLight position={[-3, 4, -2]} intensity={0.28} color="#E8F0FF" />
+      <pointLight position={[0, 1, 3]} intensity={0.22} color="#FFF8E8" />
 
-      {/* 보조 라이트 — 반대편에서 약하게 (림 라이트 효과) */}
-      <directionalLight
-        position={[-3, 4, -2]}
-        intensity={0.28}
-        color="#E8F0FF"
-      />
-
-      {/* 아래쪽 fill light — 얼굴 음영 완화 */}
-      <pointLight
-        position={[0, 1, 3]}
-        intensity={0.22}
-        color="#FFF8E8"
-      />
-
-      {/* 환경 반사광 */}
       <Suspense fallback={null}>
         <Environment preset="apartment" />
       </Suspense>
 
       <Ground />
-      {/* GLB 로딩 중 에러 방지용 Suspense */}
+      <ClickableGround />   {/* 보이지 않는 클릭 평면 */}
+      <ClickRipple />       {/* 클릭 위치 ripple 효과 */}
+
       <Suspense fallback={null}>
         <HamsterSwarm />
       </Suspense>
       <PoopField />
 
-      {/* 발 밑 부드러운 그림자 */}
-      <ContactShadows
-        position={[0, 0.01, 0]}
-        opacity={0.35}
-        scale={20}
-        blur={2.5}
-        far={4}
-      />
+      <ContactShadows position={[0, 0.01, 0]} opacity={0.35} scale={20} blur={2.5} far={4} />
     </Canvas>
   )
 }

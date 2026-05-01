@@ -28,6 +28,10 @@ interface GameStore {
   hamsters: HamsterInstance[]
   selectedVariantId: string
 
+  // ── 사용자 클릭 타겟 ─────────────────────────────
+  userTarget: { x: number; z: number } | null
+  setUserTarget: (target: { x: number; z: number } | null) => void
+
   // ── 먹이 ────────────────────────────────────────
   selectedFoodId: string
 
@@ -71,6 +75,7 @@ interface GameStore {
 export const useGameStore = create<GameStore>((set, get) => ({
   hamsters: [],
   selectedVariantId: 'golden',
+  userTarget: null,
 
   selectedFoodId: 'sunflower',
 
@@ -104,6 +109,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   setSelectedFood: (foodId) => set({ selectedFoodId: foodId }),
+  setUserTarget: (target) => set({ userTarget: target }),
 
   // ── 드로잉 ──────────────────────────────────────
   startStroke: () => set({ currentStroke: [] }),
