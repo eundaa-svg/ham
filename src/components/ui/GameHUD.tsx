@@ -2,7 +2,6 @@ import { useState } from 'react'
 import TopBar from './TopBar'
 import BottomToolbar from './BottomToolbar'
 import StartFAB from './StartFAB'
-import ClearPoopButton from './ClearPoopButton'
 import HamsterPickerSheet from './HamsterPickerSheet'
 import FoodPickerSheet from './FoodPickerSheet'
 import SettingsSheet from './SettingsSheet'
@@ -47,16 +46,6 @@ export default function GameHUD() {
         }}>
           <BottomToolbar />
         </div>
-      </div>
-
-      {/* 좌하단: 모두 치우기 (똥 있을 때만 노출) */}
-      <div style={{
-        position: 'fixed',
-        bottom: 'calc(max(16px, env(safe-area-inset-bottom)) + 88px)',
-        left: 20,
-        zIndex: 30,
-      }}>
-        <ClearPoopButton />
       </div>
 
       {/* 우하단: 시작 FAB */}

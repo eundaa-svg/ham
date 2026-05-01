@@ -5,8 +5,13 @@ interface Props { onClose: () => void }
 export default function SettingsSheet({ onClose }: Props) {
   const poopSize       = useGameStore((s) => s.poopSize)
   const poopSpacing    = useGameStore((s) => s.poopSpacing)
+  const poops          = useGameStore((s) => s.poops)
+  const phase          = useGameStore((s) => s.phase)
   const setPoopSize    = useGameStore((s) => s.setPoopSize)
   const setPoopSpacing = useGameStore((s) => s.setPoopSpacing)
+  const clearPoops     = useGameStore((s) => s.clearPoops)
+
+  const canClear = poops.length > 0 && phase !== 'pooping'
 
   return (
     <>
@@ -71,9 +76,46 @@ export default function SettingsSheet({ onClose }: Props) {
               <span>촘촘</span><span>듬성</span>
             </div>
           </div>
+
+          {/* 모두 치우기 */}
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 20 }}>
+            <button
+              onClick={() => { if (!canClear) return; clearPoops(); onClose() }}
+              disabled={!canClear}
+              style={{
+                width: '100%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                padding: '12px',
+                borderRadius: 'var(--radius-md)',
+                background: canClear ? 'var(--bg)' : 'transparent',
+                border: '1px solid var(--border)',
+                color: canClear ? 'var(--text)' : 'var(--text-subtle)',
+                opacity: canClear ? 1 : 0.5,
+                cursor: canClear ? 'pointer' : 'not-allowed',
+                transition: 'opacity 0.15s',
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M3 11l4-4M2 12h6M9 5l3-3M11 4l-1-1"
+                  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M5.5 8.5l-2 2M7 7l1.5-1.5" stroke="currentColor"
+                  strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              <span style={{ fontSize: 13, fontWeight: 500 }}>모두 치우기</span>
+              {poops.length > 0 && (
+                <span style={{
+                  fontSize: 11, fontVariantNumeric: 'tabular-nums',
+                  padding: '2px 8px', borderRadius: 'var(--radius-pill)',
+                  background: 'var(--surface-elev)', color: 'var(--text-muted)',
+                }}>
+                  {poops.length}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
-        <div style={{ height: 24 }} />
+        <div style={{ height: 8 }} />
       </div>
     </>
   )
