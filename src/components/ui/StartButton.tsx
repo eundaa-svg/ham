@@ -2,47 +2,36 @@ import { useGameStore } from '../../store/useGameStore'
 import { sampleDrawnPath, sampleTextPath } from '../../lib/pathSampler'
 
 export default function StartButton() {
-  const phase = useGameStore((s) => s.phase)
-  const inputMode = useGameStore((s) => s.inputMode)
-  const textInput = useGameStore((s) => s.textInput)
+  const phase       = useGameStore((s) => s.phase)
+  const inputMode   = useGameStore((s) => s.inputMode)
+  const textInput   = useGameStore((s) => s.textInput)
   const drawnPoints = useGameStore((s) => s.drawnPoints)
-  const hamsters = useGameStore((s) => s.hamsters)
+  const hamsters    = useGameStore((s) => s.hamsters)
 
-  const setPhase = useGameStore((s) => s.setPhase)
+  const setPhase        = useGameStore((s) => s.setPhase)
   const setComputedPath = useGameStore((s) => s.setComputedPath)
-  const setHamsterAssignments = useGameStore((s) => s.setHamsterAssignments)
-  const reset = useGameStore((s) => s.reset)
-  const clearPoops = useGameStore((s) => s.clearPoops)
+  const clearPoops      = useGameStore((s) => s.clearPoops)
+  const reset           = useGameStore((s) => s.reset)
 
-  // 입력이 유효한지 (시작 버튼 활성화 조건)
   const hasInput =
     inputMode === 'text' ? textInput.trim().length > 0 : drawnPoints.length >= 5
 
   const handleStart = () => {
-    // 1) 입력 → 3D 경로 점 배열
+    // 이전 똥 제거 후 경로 계산
+    clearPoops()
+
     const path =
       inputMode === 'text'
-        ? sampleTextPath(textInput, 0.25)
-        : sampleDrawnPath(drawnPoints, 0.25)
+        ? sampleTextPath(textInput, 0.18)      // 촘촘한 spacing
+        : sampleDrawnPath(drawnPoints, 0.18)
 
-    if (path.length < 2) return
-
-    // 2) 경로 점을 햄스터 수만큼 라운드로빈으로 분배
-    const assignments: Record<string, number[]> = {}
-    hamsters.forEach((h) => { assignments[h.id] = [] })
-    path.forEach((_, idx) => {
-      const h = hamsters[idx % hamsters.length]
-      assignments[h.id].push(idx)
-    })
+    if (path.length === 0) return
 
     setComputedPath(path)
-    setHamsterAssignments(assignments)
-    // completedCount 리셋은 reset()이 처리하므로 여기선 phase만 전환
-    useGameStore.setState({ completedCount: 0 })
     setPhase('pooping')
   }
 
-  // ─── pooping 중 ──────────────────────────────────────────────
+  // ── pooping 중: 중단 버튼 ────────────────────────────────────
   if (phase === 'pooping') {
     return (
       <button
@@ -54,7 +43,7 @@ export default function StartButton() {
     )
   }
 
-  // ─── idle / completed ────────────────────────────────────────
+  // ── idle / completed ─────────────────────────────────────────
   return (
     <div className="flex flex-col items-end gap-2">
       <button

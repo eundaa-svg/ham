@@ -9,7 +9,7 @@ export default function Scene() {
   return (
     <Canvas
       shadows
-      camera={{ position: [0, 6, 8], fov: 45 }}
+      camera={{ position: [0, 7, 6], fov: 45 }}
       style={{ width: '100%', height: '100%' }}
     >
       <ambientLight intensity={0.6} />

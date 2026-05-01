@@ -39,7 +39,7 @@ export default function Poop({ position, variantId }: PoopProps) {
 
   return (
     <mesh ref={meshRef} position={position} castShadow>
-      <capsuleGeometry args={[0.06, 0.08, 4, 8]} />
+      <capsuleGeometry args={[0.08, 0.08, 4, 8]} />
       <meshStandardMaterial color={color} roughness={0.7} />
     </mesh>
   )

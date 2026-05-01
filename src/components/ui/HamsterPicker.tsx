@@ -2,37 +2,43 @@ import { useGameStore } from '../../store/useGameStore'
 import { HAMSTER_VARIANTS } from '../../lib/hamsterTypes'
 
 export default function HamsterPicker() {
-  const selectedVariants = useGameStore((s) => s.selectedVariants)
-  const countPerVariant = useGameStore((s) => s.countPerVariant)
-  const toggleVariant = useGameStore((s) => s.toggleVariant)
-  const setCountPerVariant = useGameStore((s) => s.setCountPerVariant)
+  const selectedVariantId = useGameStore((s) => s.selectedVariantId)
+  const setSelectedVariant = useGameStore((s) => s.setSelectedVariant)
+  const phase = useGameStore((s) => s.phase)
 
-  const total = selectedVariants.length * countPerVariant
+  const selected = HAMSTER_VARIANTS.find((v) => v.id === selectedVariantId)
 
   return (
-    <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg p-4 w-64">
-      <h3 className="text-sm font-semibold text-gray-700 mb-3">🐹 햄스터 선택</h3>
+    <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg p-4 w-56">
+      <h3 className="text-sm font-semibold text-gray-700 mb-0.5">🐹 햄스터 선택</h3>
+      <p className="text-xs text-gray-400 mb-3">한 마리를 골라주세요</p>
 
-      {/* 5종 컬러 토글 버튼 */}
-      <div className="flex gap-2 mb-4">
+      {/* 5종 라디오 버튼 (컬러 동그라미) */}
+      <div className="flex gap-2 justify-between">
         {HAMSTER_VARIANTS.map((v) => {
-          const isSelected = selectedVariants.includes(v.id)
+          const isSelected = selectedVariantId === v.id
           return (
             <button
               key={v.id}
-              onClick={() => toggleVariant(v.id)}
+              onClick={() => {
+                // pooping 중에는 선택 변경 불가
+                if (phase === 'pooping') return
+                setSelectedVariant(v.id)
+              }}
               title={v.name}
+              disabled={phase === 'pooping'}
               className="transition-all duration-150"
               style={{
                 width: 36,
                 height: 36,
                 borderRadius: '50%',
                 backgroundColor: v.bodyColor,
-                outline: isSelected ? '2.5px solid #f472b6' : '2.5px solid transparent',
+                // 선택된 것: 분홍 링 + 약간 확대
+                outline: isSelected ? '3px solid #f472b6' : '3px solid transparent',
                 outlineOffset: 2,
-                opacity: isSelected ? 1 : 0.35,
-                transform: isSelected ? 'scale(1.12)' : 'scale(1)',
-                cursor: 'pointer',
+                opacity: phase === 'pooping' ? 0.5 : isSelected ? 1 : 0.45,
+                transform: isSelected ? 'scale(1.15)' : 'scale(1)',
+                cursor: phase === 'pooping' ? 'not-allowed' : 'pointer',
                 border: 'none',
               }}
             />
@@ -40,32 +46,12 @@ export default function HamsterPicker() {
         })}
       </div>
 
-      {/* 종류당 마릿수 조절 */}
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-600">종류당 마릿수</span>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setCountPerVariant(countPerVariant - 1)}
-            className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 font-bold leading-none transition-colors"
-          >
-            −
-          </button>
-          <span className="w-5 text-center text-sm font-semibold text-gray-800">
-            {countPerVariant}
-          </span>
-          <button
-            onClick={() => setCountPerVariant(countPerVariant + 1)}
-            className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 font-bold leading-none transition-colors"
-          >
-            +
-          </button>
-        </div>
-      </div>
-
-      {/* 총 마릿수 표시 */}
-      <p className="text-xs text-gray-400 mt-2 text-right">
-        총 {total}마리
-      </p>
+      {/* 선택된 햄스터 이름 */}
+      {selected && (
+        <p className="text-xs text-gray-500 mt-3 text-center">
+          <span className="font-medium text-gray-700">{selected.name}</span>와 그림 그리기 🎨
+        </p>
+      )}
     </div>
   )
 }

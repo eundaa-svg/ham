@@ -1,11 +1,10 @@
 import { canvasToWorld } from './coords'
 import type { PathPoint } from '../store/useGameStore'
 
-// ── 드로잉 경로 샘플링 ──────────────────────────────────────────
-// raw 픽셀 점들을 월드 좌표로 변환 후 spacing 간격으로 솎아냄
+// ── 드로잉 경로 샘플링 ────────────────────────────────────────────
 export function sampleDrawnPath(
   rawPoints: { x: number; y: number }[],
-  spacing = 0.25
+  spacing = 0.18
 ): PathPoint[] {
   if (rawPoints.length < 2) return []
 
@@ -30,42 +29,37 @@ export function sampleDrawnPath(
   return result
 }
 
-// ── 텍스트 경로 샘플링 ──────────────────────────────────────────
-// 오프스크린 캔버스에 텍스트를 렌더링한 뒤,
-// 어두운 픽셀만 추출해 3D 월드 좌표로 변환
-export function sampleTextPath(text: string, spacing = 0.25): PathPoint[] {
+// ── 텍스트 경로 샘플링 ────────────────────────────────────────────
+// 오프스크린 캔버스에 텍스트 렌더링 → 어두운 픽셀 추출 → 3D 좌표 변환
+export function sampleTextPath(text: string, spacing = 0.18): PathPoint[] {
   if (!text.trim()) return []
 
   const W = 800
   const H = 200
   const canvas = document.createElement('canvas')
-  canvas.width = W
+  canvas.width  = W
   canvas.height = H
   const ctx = canvas.getContext('2d')!
 
-  // 흰 배경
   ctx.fillStyle = 'white'
   ctx.fillRect(0, 0, W, H)
-
-  // 텍스트 렌더링 (한글 포함)
   ctx.fillStyle = 'black'
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
+  ctx.textAlign     = 'center'
+  ctx.textBaseline  = 'middle'
   ctx.font = 'bold 130px sans-serif'
   ctx.fillText(text, W / 2, H / 2)
 
   const { data } = ctx.getImageData(0, 0, W, H)
 
-  // 어두운 픽셀(r < 80) 수집 — 4px 간격으로 샘플링해서 수량 제어
-  const SAMPLE_STEP = 4
-  const rawWorldPts: PathPoint[] = []
+  // 3px 간격으로 샘플링 (기존 4 → 3, 더 촘촘)
+  const STEP = 3
+  const rawPts: PathPoint[] = []
 
-  for (let y = 0; y < H; y += SAMPLE_STEP) {
-    for (let x = 0; x < W; x += SAMPLE_STEP) {
+  for (let y = 0; y < H; y += STEP) {
+    for (let x = 0; x < W; x += STEP) {
       const r = data[(y * W + x) * 4]
       if (r < 80) {
-        // 800×200 캔버스 → 월드 x: -2.75~2.75, z: -0.9~0.9
-        rawWorldPts.push({
+        rawPts.push({
           x: (x / W - 0.5) * 5.5,
           z: (y / H - 0.5) * 1.8,
         })
@@ -73,14 +67,14 @@ export function sampleTextPath(text: string, spacing = 0.25): PathPoint[] {
     }
   }
 
-  if (rawWorldPts.length === 0) return []
+  if (rawPts.length === 0) return []
 
-  // 가로줄 순서(y→x)로 정렬해 왼쪽-위부터 오른쪽-아래 방향으로 경로 형성
-  rawWorldPts.sort((a, b) => a.z - b.z || a.x - b.x)
+  // 위→아래, 좌→우 순 정렬 (글자를 순서대로 따라가게)
+  rawPts.sort((a, b) => a.z - b.z || a.x - b.x)
 
   // spacing 기반 다운샘플링
-  const result: PathPoint[] = [rawWorldPts[0]]
-  for (const pt of rawWorldPts) {
+  const result: PathPoint[] = [rawPts[0]]
+  for (const pt of rawPts) {
     const last = result[result.length - 1]
     const dx = pt.x - last.x
     const dz = pt.z - last.z
