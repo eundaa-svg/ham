@@ -5,6 +5,7 @@ export default function StartButton() {
   const phase       = useGameStore((s) => s.phase)
   const drawnPoints = useGameStore((s) => s.drawnPoints)
   const hamsters    = useGameStore((s) => s.hamsters)
+  const poopSpacing = useGameStore((s) => s.poopSpacing)  // 설정값 반영
 
   const setPhase        = useGameStore((s) => s.setPhase)
   const setComputedPath = useGameStore((s) => s.setComputedPath)
@@ -16,11 +17,10 @@ export default function StartButton() {
   const handleStart = () => {
     clearPoops()
 
-    const path = sampleDrawnPath(drawnPoints, 0.15)
+    const path = sampleDrawnPath(drawnPoints, poopSpacing)
 
     console.log('[DEBUG] 드로잉 점 수:', drawnPoints.length)
-    console.log('[DEBUG] 경로 점 수:', path.length)
-    console.log('[DEBUG] 첫 5개 점:', path.slice(0, 5))
+    console.log('[DEBUG] 경로 점 수:', path.length, '/ spacing:', poopSpacing)
 
     if (path.length === 0) {
       console.error('[DEBUG] 경로가 비어있음!')

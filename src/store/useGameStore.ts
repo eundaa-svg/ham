@@ -16,37 +16,39 @@ export interface PathPoint {
 export interface PoopInstance {
   id: string
   position: [number, number, number]
-  rotation: number   // Y축 랜덤 회전값
+  rotation: number
   spawnedAt: number
 }
 
 interface GameStore {
-  // ── 햄스터 ────────────────────────────────────────
+  // ── 햄스터 ──────────────────────────────────────
   hamsters: HamsterInstance[]
   selectedVariantId: string
 
-  // ── 입력 (드로잉 전용) ────────────────────────────
-  drawnPoints: { x: number; y: number }[]   // 0~1 정규화 좌표
+  // ── 입력 ────────────────────────────────────────
+  drawnPoints: { x: number; y: number }[]
 
   // ── 게임 진행 ────────────────────────────────────
   phase: GamePhase
   computedPath: PathPoint[]
   poops: PoopInstance[]
 
-  // ── 햄스터 actions ──────────────────────────────
+  // ── 사용자 설정 ──────────────────────────────────
+  poopSize: number      // 똥 크기 배율 (0.5 ~ 2.0)
+  poopSpacing: number   // 경로 점 간격 (0.08 ~ 0.30)
+
+  // ── actions ─────────────────────────────────────
   setSelectedVariant: (variantId: string) => void
   rebuildHamster: () => void
-
-  // ── 입력 actions ────────────────────────────────
   addDrawnPoint: (point: { x: number; y: number }) => void
   clearDrawnPoints: () => void
-
-  // ── 게임 actions ────────────────────────────────
   setPhase: (phase: GamePhase) => void
   setComputedPath: (path: PathPoint[]) => void
   addPoop: (poop: PoopInstance) => void
   clearPoops: () => void
   reset: () => void
+  setPoopSize: (size: number) => void
+  setPoopSpacing: (spacing: number) => void
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -59,7 +61,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   computedPath: [],
   poops: [],
 
-  // ── 햄스터 actions ──────────────────────────────
+  poopSize: 1.0,
+  poopSpacing: 0.15,
+
+  // ── 햄스터 ──────────────────────────────────────
   setSelectedVariant: (variantId) => {
     set({ selectedVariantId: variantId })
     get().rebuildHamster()
@@ -76,19 +81,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
     })
   },
 
-  // ── 입력 actions ────────────────────────────────
-  // drawnPoints는 0~1 정규화 좌표로 저장 (캔버스 크기 독립적)
+  // ── 입력 ────────────────────────────────────────
   addDrawnPoint: (point) =>
     set((s) => ({ drawnPoints: [...s.drawnPoints, point] })),
   clearDrawnPoints: () => set({ drawnPoints: [] }),
 
-  // ── 게임 actions ────────────────────────────────
+  // ── 게임 ────────────────────────────────────────
   setPhase: (phase) => set({ phase }),
   setComputedPath: (path) => set({ computedPath: path }),
   addPoop: (poop) => set((s) => ({ poops: [...s.poops, poop] })),
   clearPoops: () => set({ poops: [] }),
-
   reset: () => set({ phase: 'idle', computedPath: [], poops: [] }),
+
+  // ── 설정 ────────────────────────────────────────
+  setPoopSize: (size) => set({ poopSize: size }),
+  setPoopSpacing: (spacing) => set({ poopSpacing: spacing }),
 }))
 
 useGameStore.getState().rebuildHamster()

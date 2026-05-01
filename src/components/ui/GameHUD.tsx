@@ -1,15 +1,19 @@
 import HamsterPicker from './HamsterPicker'
 import InputPanel from './InputPanel'
 import StartButton from './StartButton'
+import SettingsPanel from './SettingsPanel'
 
-// 외곽: pointer-events-none → Canvas 조작 유지
-// 각 패널: pointer-events-auto
 export default function GameHUD() {
   return (
     <div className="fixed inset-0 pointer-events-none z-10">
       {/* 좌상단: 햄스터 선택 */}
       <div className="absolute top-4 left-4 pointer-events-auto">
         <HamsterPicker />
+      </div>
+
+      {/* 우상단: 설정 패널 */}
+      <div className="absolute top-4 right-4 pointer-events-auto">
+        <SettingsPanel />
       </div>
 
       {/* 하단 중앙: 드로잉 입력 */}
