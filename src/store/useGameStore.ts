@@ -53,7 +53,7 @@ interface GameStore {
 
 export const useGameStore = create<GameStore>((set, get) => ({
   hamsters: [],
-  selectedVariantId: 'gray',
+  selectedVariantId: 'golden',
 
   drawnPoints: [],
 

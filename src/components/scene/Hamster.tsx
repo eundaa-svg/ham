@@ -3,13 +3,12 @@ import { useFrame } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { useGameStore } from '../../store/useGameStore'
+import { HAMSTER_VARIANTS } from '../../lib/hamsterTypes'
 
 interface HamsterProps {
   variantId: string
   initialPosition?: [number, number, number]
 }
-
-const MODEL_PATH = '/models/golden_ham.glb'
 
 function pickNewTarget(target: THREE.Vector3) {
   const angle  = Math.random() * Math.PI * 2
@@ -17,8 +16,10 @@ function pickNewTarget(target: THREE.Vector3) {
   target.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius)
 }
 
-export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: HamsterProps) {
-  const { scene } = useGLTF(MODEL_PATH)
+// variantId에 따라 동적으로 GLB를 로드하는 내부 컴포넌트
+// useGLTF는 hook이므로 조건부 호출 불가 → 별도 컴포넌트로 분리
+function HamsterModel({ modelPath }: { modelPath: string }) {
+  const { scene } = useGLTF(modelPath)
 
   const clonedScene = useMemo(() => {
     const cloned = scene.clone(true)
@@ -31,10 +32,17 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
     return cloned
   }, [scene])
 
-  useEffect(() => {
-    console.log('[GLB] 모델 로드 완료:', MODEL_PATH)
-    console.log('[GLB] 최상위 자식 수:', scene.children.length)
-  }, [scene])
+  return (
+    <primitive
+      object={clonedScene}
+      scale={[8, 8, 8]}
+      position={[0, 0.5, 0]}
+    />
+  )
+}
+
+export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: HamsterProps) {
+  const variant = HAMSTER_VARIANTS.find((v) => v.id === variantId) ?? HAMSTER_VARIANTS[0]
 
   // ── refs ────────────────────────────────────────────────────────
   const groupRef  = useRef<THREE.Group>(null!)
@@ -98,8 +106,6 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
       }
 
       const tp = path[pathIndexRef.current]
-
-      // 햄스터는 정확히 path point를 향해 이동
       targetVec.current.set(tp.x, 0, tp.z)
       dirVec.current.subVectors(targetVec.current, pos)
       dirVec.current.y = 0
@@ -109,7 +115,6 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
       stuckTimerRef.current += delta
       if (stuckTimerRef.current > 3) {
         console.warn(`[DEBUG] stuck! 강제 진행: 점 ${pathIndexRef.current}`)
-        // 똥은 정확히 path point 위치에
         useGameStore.getState().addPoop({
           id: `poop-stuck-${Date.now()}`,
           position: [tp.x, 0.06, tp.z],
@@ -121,11 +126,10 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
         return
       }
 
-      // 도착 판정 (0.10으로 빡빡하게)
+      // 도착 판정
       if (dist < 0.10) {
         console.log(`[DEBUG] 점 ${pathIndexRef.current}/${path.length} 도착`)
         stuckTimerRef.current = 0
-        // 똥은 햄스터 현재 위치가 아닌 정확히 path point 위치에
         useGameStore.getState().addPoop({
           id: `poop-${Date.now()}-${Math.random()}`,
           position: [tp.x, 0.06, tp.z],
@@ -136,7 +140,6 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
         return
       }
 
-      // 이동 (속도 2.0으로 오버슈팅 방지)
       dirVec.current.normalize()
       pos.x += dirVec.current.x * 2.0 * delta
       pos.z += dirVec.current.z * 2.0 * delta
@@ -178,13 +181,10 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
 
   return (
     <group ref={groupRef} position={initialPosition}>
-      <primitive
-        object={clonedScene}
-        scale={[8, 8, 8]}
-        position={[0, 0.5, 0]}
-      />
+      <HamsterModel modelPath={variant.modelPath} />
     </group>
   )
 }
 
-useGLTF.preload(MODEL_PATH)
+// 4종 모두 페이지 로드 시 미리 다운로드
+HAMSTER_VARIANTS.forEach((v) => useGLTF.preload(v.modelPath))
