@@ -18,51 +18,75 @@ export default function StartButton() {
 
   const handleStart = () => {
     clearPoops()
-
     const path = sampleDrawnPath(drawnStrokes, poopSpacing)
-
-    console.log('[DEBUG] 스트로크 수:', drawnStrokes.length)
-    console.log('[DEBUG] 경로 점 수:', path.length, '/ spacing:', poopSpacing)
-
-    if (path.length === 0) {
-      console.error('[DEBUG] 경로가 비어있음!')
-      return
-    }
-
+    console.log('[DEBUG] 스트로크 수:', drawnStrokes.length, '/ 경로 점 수:', path.length)
+    if (path.length === 0) return
     setComputedPath(path)
     setPhase('pooping')
-    setInputPanelCollapsed(true)   // 시작과 동시에 패널 자동 접기
+    setInputPanelCollapsed(true)
   }
 
+  // pooping 중: 중단 버튼
   if (phase === 'pooping') {
     return (
       <button
         onClick={reset}
-        className="px-6 py-3 rounded-2xl bg-gray-200 text-gray-600 font-medium shadow-lg hover:bg-gray-300 transition"
+        style={{
+          padding: '12px 24px',
+          borderRadius: 'var(--radius-pill)',
+          fontSize: 14,
+          fontWeight: 600,
+          background: 'var(--surface-elev)',
+          color: 'var(--text-muted)',
+          border: '1px solid var(--border)',
+          boxShadow: 'var(--shadow-sm)',
+          cursor: 'pointer',
+        }}
       >
-        ⏹ 중단
+        중단
       </button>
     )
   }
 
   return (
-    <div className="flex flex-col items-end gap-2">
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
       <button
         onClick={handleStart}
         disabled={!hasInput || hamsters.length === 0}
-        className={`px-6 py-3 rounded-2xl font-medium shadow-lg transition ${
-          hasInput && hamsters.length > 0
-            ? 'bg-pink-300 hover:bg-pink-400 text-pink-900 cursor-pointer'
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-        }`}
+        style={{
+          padding: '13px 28px',
+          borderRadius: 'var(--radius-pill)',
+          fontSize: 14,
+          fontWeight: 600,
+          background: hasInput ? 'var(--accent)' : 'var(--text-subtle)',
+          color: '#FFFFFF',
+          border: 'none',
+          boxShadow: hasInput ? 'var(--shadow-md)' : 'none',
+          opacity: hasInput ? 1 : 0.5,
+          cursor: hasInput ? 'pointer' : 'not-allowed',
+          transition: 'background 0.15s, box-shadow 0.15s',
+        }}
+        onMouseEnter={(e) => {
+          if (hasInput) e.currentTarget.style.background = 'var(--accent-hover)'
+        }}
+        onMouseLeave={(e) => {
+          if (hasInput) e.currentTarget.style.background = 'var(--accent)'
+        }}
       >
-        ▶ 시작!
+        시작
       </button>
       <button
         onClick={() => { clearPoops(); reset() }}
-        className="text-xs text-gray-400 hover:text-gray-700 transition"
+        style={{
+          fontSize: 11,
+          color: 'var(--text-subtle)',
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          padding: '2px 4px',
+        }}
       >
-        💩 똥 모두 치우기
+        모두 치우기
       </button>
     </div>
   )

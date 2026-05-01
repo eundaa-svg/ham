@@ -12,7 +12,8 @@ function drawStrokes(
 ) {
   const ctx = canvas.getContext('2d')!
   ctx.clearRect(0, 0, w, h)
-  ctx.fillStyle = '#FAF6EE'
+  ctx.fillStyle = getComputedStyle(document.documentElement)
+    .getPropertyValue('--bg').trim() || '#F2EBDD'
   ctx.fillRect(0, 0, w, h)
 
   ctx.strokeStyle = '#3A2818'
@@ -20,7 +21,6 @@ function drawStrokes(
   ctx.lineCap     = 'round'
   ctx.lineJoin    = 'round'
 
-  // 완료된 스트로크들: stroke마다 beginPath() → 서로 연결 안 됨
   for (const stroke of strokes) {
     if (stroke.length < 2) continue
     ctx.beginPath()
@@ -31,7 +31,6 @@ function drawStrokes(
     ctx.stroke()
   }
 
-  // 현재 그리는 중인 스트로크
   if (current.length >= 2) {
     ctx.beginPath()
     ctx.moveTo(current[0].x * w, current[0].y * h)
@@ -43,23 +42,22 @@ function drawStrokes(
 }
 
 export default function DrawingCanvas() {
-  const canvasRef  = useRef<HTMLCanvasElement>(null)
-  const isDrawing  = useRef(false)
-  const lastPt     = useRef<Point | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const isDrawing = useRef(false)
+  const lastPt    = useRef<Point | null>(null)
 
   const [isExpanded, setIsExpanded] = useState(false)
 
   const CANVAS_W = isExpanded ? 560 : 280
   const CANVAS_H = isExpanded ? 360 : 160
 
-  const drawnStrokes   = useGameStore((s) => s.drawnStrokes)
-  const currentStroke  = useGameStore((s) => s.currentStroke)
-  const startStroke    = useGameStore((s) => s.startStroke)
-  const addPointToStroke = useGameStore((s) => s.addPointToStroke)
-  const endStroke      = useGameStore((s) => s.endStroke)
+  const drawnStrokes      = useGameStore((s) => s.drawnStrokes)
+  const currentStroke     = useGameStore((s) => s.currentStroke)
+  const startStroke       = useGameStore((s) => s.startStroke)
+  const addPointToStroke  = useGameStore((s) => s.addPointToStroke)
+  const endStroke         = useGameStore((s) => s.endStroke)
   const clearDrawnStrokes = useGameStore((s) => s.clearDrawnStrokes)
 
-  // 스트로크 또는 캔버스 크기 변경 시 다시 그리기
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -102,7 +100,6 @@ export default function DrawingCanvas() {
     endStroke()
   }
 
-  // 캔버스 밖으로 나가면 stroke 종료
   const handlePointerLeave = () => {
     if (isDrawing.current) {
       isDrawing.current = false
@@ -112,32 +109,46 @@ export default function DrawingCanvas() {
   }
 
   const handleExpandToggle = () => {
-    const totalPoints = drawnStrokes.reduce((s, stroke) => s + stroke.length, 0)
-    if (totalPoints > 0) {
+    const total = drawnStrokes.reduce((s, st) => s + st.length, 0)
+    if (total > 0) {
       if (!window.confirm('확대/축소하면 현재 그림이 지워져요. 계속할까요?')) return
       clearDrawnStrokes()
     }
     setIsExpanded((v) => !v)
   }
 
-  const totalPoints = drawnStrokes.reduce((s, stroke) => s + stroke.length, 0)
-    + currentStroke.length
+  const totalPoints = drawnStrokes.reduce((s, st) => s + st.length, 0) + currentStroke.length
 
   return (
-    <div className="flex flex-col gap-2">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {/* 컨트롤 바 */}
       <div className="flex items-center justify-between">
         <button
           onClick={handleExpandToggle}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-pink-100 hover:bg-pink-200 text-pink-700 text-xs font-medium transition"
+          className="transition-colors"
+          style={{
+            padding: '5px 10px',
+            borderRadius: 'var(--radius-sm)',
+            fontSize: 11,
+            fontWeight: 500,
+            background: isExpanded ? 'var(--accent-soft)' : 'var(--bg)',
+            color: isExpanded ? 'var(--accent)' : 'var(--text-muted)',
+            border: 'none',
+            cursor: 'pointer',
+          }}
         >
-          {isExpanded
-            ? <><span>🔍−</span><span>축소</span></>
-            : <><span>🔍+</span><span>크게 그리기</span></>}
+          {isExpanded ? '축소' : '크게'}
         </button>
         <button
           onClick={clearDrawnStrokes}
-          className="text-xs text-gray-400 hover:text-gray-700 transition px-2"
+          style={{
+            fontSize: 11,
+            color: 'var(--text-subtle)',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '4px 8px',
+          }}
         >
           지우기
         </button>
@@ -148,8 +159,14 @@ export default function DrawingCanvas() {
         ref={canvasRef}
         width={CANVAS_W}
         height={CANVAS_H}
-        className="rounded-lg cursor-crosshair touch-none block"
-        style={{ border: '1.5px solid #E0D5C0', backgroundColor: '#FAF6EE' }}
+        style={{
+          display: 'block',
+          borderRadius: 'var(--radius-md)',
+          border: '1px solid var(--border)',
+          backgroundColor: 'var(--bg)',
+          cursor: 'crosshair',
+          touchAction: 'none',
+        }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -157,8 +174,14 @@ export default function DrawingCanvas() {
       />
 
       {totalPoints === 0 && (
-        <p className="text-xs text-gray-400 text-center">
-          💡 마우스로 모양을 그려보세요
+        <p
+          style={{
+            fontSize: 11,
+            color: 'var(--text-subtle)',
+            textAlign: 'center',
+          }}
+        >
+          마우스로 모양을 그려보세요
         </p>
       )}
     </div>

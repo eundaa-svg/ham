@@ -6,24 +6,42 @@ export default function InputPanel() {
   const setCollapsed = useGameStore((s) => s.setInputPanelCollapsed)
 
   return (
-    <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg overflow-hidden">
-      {/* 헤더 — 항상 표시, 클릭으로 접기/펼치기 */}
+    <div
+      style={{
+        background: 'var(--surface-elev)',
+        boxShadow: 'var(--shadow-md)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-lg)',
+        overflow: 'hidden',
+      }}
+    >
+      {/* 헤더 */}
       <button
         onClick={() => setCollapsed(!isCollapsed)}
-        className="w-full px-4 py-3 flex items-center justify-between gap-2 hover:bg-white/40 transition"
+        className="w-full flex items-center justify-between transition-colors"
+        style={{
+          padding: '12px 16px',
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+        }}
       >
-        <div className="flex items-center gap-2">
-          <span className="text-base">🎨</span>
-          <span className="text-sm font-semibold text-gray-700">햄스터에게 그려주기</span>
-        </div>
-        <span className="text-xs text-gray-400">
-          {isCollapsed ? '▲ 펼치기' : '▼ 접기'}
+        <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
+          그리기
+        </span>
+        <span style={{ fontSize: 16, color: 'var(--text-subtle)', lineHeight: 1 }}>
+          {isCollapsed ? '+' : '−'}
         </span>
       </button>
 
-      {/* 드로잉 캔버스 — 펼쳐진 상태에서만 표시 */}
+      {/* 드로잉 캔버스 */}
       {!isCollapsed && (
-        <div className="px-4 pb-4">
+        <div
+          style={{
+            borderTop: '1px solid var(--border)',
+            padding: '12px 16px 16px',
+          }}
+        >
           <DrawingCanvas />
         </div>
       )}

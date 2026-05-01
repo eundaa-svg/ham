@@ -6,59 +6,81 @@ export default function HamsterPicker() {
   const setSelectedVariant = useGameStore((s) => s.setSelectedVariant)
   const phase = useGameStore((s) => s.phase)
 
-  const selected = HAMSTER_VARIANTS.find((v) => v.id === selectedVariantId)
-
   return (
-    <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg p-4 w-64">
-      <h3 className="text-sm font-semibold text-gray-700 mb-0.5">🐹 햄스터 선택</h3>
-      <p className="text-xs text-gray-400 mb-3">한 종류를 선택하세요</p>
-
-      <div className="flex gap-1 justify-around">
+    <div
+      style={{
+        background: 'var(--surface-elev)',
+        boxShadow: 'var(--shadow-md)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-lg)',
+        padding: '12px',
+        width: '280px',
+      }}
+    >
+      <div className="grid grid-cols-4 gap-1.5">
         {HAMSTER_VARIANTS.map((v) => {
           const isSelected = selectedVariantId === v.id
           return (
             <button
               key={v.id}
-              onClick={() => {
-                if (phase === 'pooping') return
-                setSelectedVariant(v.id)
-              }}
+              onClick={() => { if (phase !== 'pooping') setSelectedVariant(v.id) }}
               disabled={phase === 'pooping'}
-              className="flex flex-col items-center gap-1 transition-all duration-150"
+              className="flex flex-col items-center gap-1.5 transition-all"
               style={{
-                opacity: phase === 'pooping' ? 0.5 : 1,
+                padding: '8px 4px',
+                borderRadius: 'var(--radius-md)',
+                background: isSelected ? 'var(--accent-soft)' : 'transparent',
                 cursor: phase === 'pooping' ? 'not-allowed' : 'pointer',
-                transform: isSelected ? 'scale(1.1)' : 'scale(1)',
+                opacity: phase === 'pooping' ? 0.5 : 1,
+                border: 'none',
               }}
             >
+              {/* PNG 썸네일 */}
               <div
                 style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: '50%',
-                  backgroundColor: v.bodyColor,
-                  outline: isSelected ? '3px solid #f472b6' : '3px solid transparent',
-                  outlineOffset: 2,
-                  opacity: isSelected ? 1 : 0.5,
-                  border: '2px solid rgba(255,255,255,0.8)',
-                  boxShadow: isSelected ? '0 2px 8px rgba(244,114,182,0.4)' : '0 1px 3px rgba(0,0,0,0.1)',
+                  width: 52,
+                  height: 52,
+                  borderRadius: 'var(--radius-sm)',
+                  overflow: 'hidden',
+                  background: 'var(--bg)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transform: isSelected ? 'scale(1.06)' : 'scale(1)',
+                  transition: 'transform 0.15s',
                 }}
-              />
-              <span className={`text-[9px] leading-tight text-center max-w-[40px] ${
-                isSelected ? 'text-pink-600 font-semibold' : 'text-gray-400'
-              }`}>
+              >
+                <img
+                  src={v.thumbnail}
+                  alt={v.name}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                    filter: isSelected ? 'none' : 'saturate(0.7)',
+                    opacity: isSelected ? 1 : 0.65,
+                    transition: 'all 0.15s',
+                  }}
+                />
+              </div>
+
+              {/* 이름 */}
+              <span
+                style={{
+                  fontSize: 10,
+                  lineHeight: 1.3,
+                  textAlign: 'center',
+                  color: isSelected ? 'var(--accent)' : 'var(--text-muted)',
+                  fontWeight: isSelected ? 600 : 500,
+                  letterSpacing: '-0.01em',
+                }}
+              >
                 {v.name}
               </span>
             </button>
           )
         })}
       </div>
-
-      {selected && (
-        <p className="text-xs text-gray-500 mt-3 text-center">
-          <span className="font-medium text-gray-700">{selected.name}</span> 햄스터와 그림 그리기 🎨
-        </p>
-      )}
     </div>
   )
 }
