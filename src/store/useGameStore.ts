@@ -87,7 +87,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   poops: [],
 
   poopSize: 1.0,
-  poopSpacing: 0.10,
+  poopSpacing: 0.08,
 
   isInputPanelCollapsed: false,
 
