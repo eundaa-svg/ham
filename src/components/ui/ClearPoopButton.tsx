@@ -8,45 +8,48 @@ export default function ClearPoopButton() {
   if (poops.length === 0 || phase === 'pooping') return null
 
   return (
-    <div style={{ position: 'relative' }}>
-      <button
-        onClick={clearPoops}
-        aria-label="clear all"
-        style={{
-          width: 52, height: 52, borderRadius: '50%',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'var(--surface)',
-          border: '1px solid var(--line)',
-          boxShadow: 'var(--shadow-sm)',
-          transition: 'transform 0.15s',
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)' }}
-        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)' }}
-      >
-        {/* X 아이콘 */}
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-          <path d="M2 2l9 9M11 2l-9 9"
-            stroke="var(--text)" strokeWidth="1.4" strokeLinecap="round" />
-        </svg>
-      </button>
-
-      {/* 개수 뱃지 — 블랙 모노톤 */}
-      <div style={{
-        position: 'absolute', top: -4, right: -4,
-        minWidth: 18, height: 18,
+    <button
+      onClick={clearPoops}
+      aria-label="똥 치우기"
+      style={{
+        height: 44,
+        padding: '0 18px',
         borderRadius: 999,
-        background: 'var(--text)',
-        color: 'var(--surface-elev)',
-        fontSize: 9, fontWeight: 700,
-        letterSpacing: '0.01em',
-        fontVariantNumeric: 'tabular-nums',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '0 4px',
-        border: '2px solid var(--bg)',
-        pointerEvents: 'none',
+        display: 'flex', alignItems: 'center', gap: 8,
+        background: 'var(--surface)',
+        border: '1px solid var(--line)',
+        boxShadow: 'var(--shadow-sm)',
+        transition: 'background 0.15s, border-color 0.15s',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = 'var(--text)'
+        e.currentTarget.style.borderColor = 'var(--text)'
+        e.currentTarget.querySelectorAll<HTMLElement>('span, svg').forEach((el) => {
+          el.style.color = 'var(--surface-elev)'
+        })
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'var(--surface)'
+        e.currentTarget.style.borderColor = 'var(--line)'
+        e.currentTarget.querySelectorAll<HTMLElement>('span, svg').forEach((el) => {
+          el.style.color = 'var(--text)'
+        })
+      }}
+    >
+      {/* 휴지통 아이콘 */}
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+        style={{ color: 'var(--text)', transition: 'color 0.15s', flexShrink: 0 }}>
+        <path d="M2 4h10M5 4V2.5h4V4M3 4l.5 8h7L11 4M5.5 6.5v3.5M8.5 6.5v3.5"
+          stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+
+      {/* 텍스트 */}
+      <span style={{
+        fontSize: 13, fontWeight: 600, letterSpacing: '-0.01em',
+        color: 'var(--text)', transition: 'color 0.15s',
       }}>
-        {poops.length > 99 ? '99+' : poops.length}
-      </div>
-    </div>
+        똥 치우기
+      </span>
+    </button>
   )
 }

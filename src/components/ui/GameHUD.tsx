@@ -55,7 +55,7 @@ export default function GameHUD() {
         zIndex: 30,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
+        alignItems: 'flex-end',
         gap: 12,
       }}>
         <ClearPoopButton />
