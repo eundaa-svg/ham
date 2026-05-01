@@ -106,7 +106,7 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
         useGameStore.getState().addPoop({
           id: `poop-${Date.now()}-${Math.random()}`,
           position: [pos.x, 0.06, pos.z],
-          variantId,
+          rotation: Math.random() * Math.PI * 2,
           spawnedAt: performance.now(),
         })
         pathIndexRef.current++
@@ -120,7 +120,7 @@ export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: Hams
         useGameStore.getState().addPoop({
           id: `poop-stuck-${Date.now()}`,
           position: [pos.x, 0.06, pos.z],
-          variantId,
+          rotation: Math.random() * Math.PI * 2,
           spawnedAt: performance.now(),
         })
         pathIndexRef.current++

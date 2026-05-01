@@ -1,10 +1,8 @@
 import { useGameStore } from '../../store/useGameStore'
-import { sampleDrawnPath, sampleTextPath } from '../../lib/pathSampler'
+import { sampleDrawnPath } from '../../lib/pathSampler'
 
 export default function StartButton() {
   const phase       = useGameStore((s) => s.phase)
-  const inputMode   = useGameStore((s) => s.inputMode)
-  const textInput   = useGameStore((s) => s.textInput)
   const drawnPoints = useGameStore((s) => s.drawnPoints)
   const hamsters    = useGameStore((s) => s.hamsters)
 
@@ -13,22 +11,16 @@ export default function StartButton() {
   const clearPoops      = useGameStore((s) => s.clearPoops)
   const reset           = useGameStore((s) => s.reset)
 
-  const hasInput =
-    inputMode === 'text' ? textInput.trim().length > 0 : drawnPoints.length >= 5
+  const hasInput = drawnPoints.length >= 5
 
   const handleStart = () => {
     clearPoops()
 
-    const path =
-      inputMode === 'text'
-        ? sampleTextPath(textInput, 0.15)
-        : sampleDrawnPath(drawnPoints, 0.15)
+    const path = sampleDrawnPath(drawnPoints, 0.15)
 
-    console.log('[DEBUG] 입력 모드:', inputMode)
-    console.log('[DEBUG] 원본 입력:', inputMode === 'text' ? textInput : `${drawnPoints.length}개 점`)
-    console.log('[DEBUG] 계산된 경로 점 개수:', path.length)
+    console.log('[DEBUG] 드로잉 점 수:', drawnPoints.length)
+    console.log('[DEBUG] 경로 점 수:', path.length)
     console.log('[DEBUG] 첫 5개 점:', path.slice(0, 5))
-    console.log('[DEBUG] 마지막 5개 점:', path.slice(-5))
 
     if (path.length === 0) {
       console.error('[DEBUG] 경로가 비어있음!')

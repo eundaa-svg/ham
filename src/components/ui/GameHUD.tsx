@@ -12,8 +12,8 @@ export default function GameHUD() {
         <HamsterPicker />
       </div>
 
-      {/* 하단 중앙: 텍스트 / 드로잉 입력 */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-auto">
+      {/* 하단 중앙: 드로잉 입력 */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-auto max-w-[90vw]">
         <InputPanel />
       </div>
 

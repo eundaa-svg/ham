@@ -6,7 +6,6 @@ export interface HamsterInstance {
   initialPosition: [number, number, number]
 }
 
-export type InputMode = 'text' | 'drawing'
 export type GamePhase = 'idle' | 'pooping' | 'completed'
 
 export interface PathPoint {
@@ -17,19 +16,17 @@ export interface PathPoint {
 export interface PoopInstance {
   id: string
   position: [number, number, number]
-  variantId: string
+  rotation: number   // Y축 랜덤 회전값
   spawnedAt: number
 }
 
 interface GameStore {
-  // ── 햄스터 (단일 선택) ──────────────────────────
+  // ── 햄스터 ────────────────────────────────────────
   hamsters: HamsterInstance[]
   selectedVariantId: string
 
-  // ── 입력 ────────────────────────────────────────
-  inputMode: InputMode
-  textInput: string
-  drawnPoints: { x: number; y: number }[]
+  // ── 입력 (드로잉 전용) ────────────────────────────
+  drawnPoints: { x: number; y: number }[]   // 0~1 정규화 좌표
 
   // ── 게임 진행 ────────────────────────────────────
   phase: GamePhase
@@ -41,11 +38,8 @@ interface GameStore {
   rebuildHamster: () => void
 
   // ── 입력 actions ────────────────────────────────
-  setInputMode: (mode: InputMode) => void
-  setTextInput: (text: string) => void
   addDrawnPoint: (point: { x: number; y: number }) => void
   clearDrawnPoints: () => void
-  clearInput: () => void
 
   // ── 게임 actions ────────────────────────────────
   setPhase: (phase: GamePhase) => void
@@ -56,12 +50,9 @@ interface GameStore {
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
-  // ── 초기값 ──────────────────────────────────────
   hamsters: [],
   selectedVariantId: 'gray',
 
-  inputMode: 'text',
-  textInput: '',
   drawnPoints: [],
 
   phase: 'idle',
@@ -69,13 +60,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   poops: [],
 
   // ── 햄스터 actions ──────────────────────────────
-
   setSelectedVariant: (variantId) => {
     set({ selectedVariantId: variantId })
     get().rebuildHamster()
   },
 
-  // 선택된 종류의 햄스터 1마리를 중앙에 생성
   rebuildHamster: () => {
     const { selectedVariantId } = get()
     set({
@@ -88,12 +77,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   // ── 입력 actions ────────────────────────────────
-  setInputMode: (mode) => set({ inputMode: mode }),
-  setTextInput: (text) => set({ textInput: text }),
+  // drawnPoints는 0~1 정규화 좌표로 저장 (캔버스 크기 독립적)
   addDrawnPoint: (point) =>
     set((s) => ({ drawnPoints: [...s.drawnPoints, point] })),
   clearDrawnPoints: () => set({ drawnPoints: [] }),
-  clearInput: () => set({ textInput: '', drawnPoints: [] }),
 
   // ── 게임 actions ────────────────────────────────
   setPhase: (phase) => set({ phase }),
@@ -101,9 +88,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   addPoop: (poop) => set((s) => ({ poops: [...s.poops, poop] })),
   clearPoops: () => set({ poops: [] }),
 
-  reset: () =>
-    set({ phase: 'idle', computedPath: [], poops: [] }),
+  reset: () => set({ phase: 'idle', computedPath: [], poops: [] }),
 }))
 
-// 앱 시작 시 햄스터 1마리 초기 생성
 useGameStore.getState().rebuildHamster()
