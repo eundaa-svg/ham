@@ -17,6 +17,7 @@ export interface PoopInstance {
   id: string
   position: [number, number, number]
   rotation: number
+  foodId: string    // 어떤 먹이에서 나온 똥인지
   spawnedAt: number
 }
 
@@ -27,9 +28,12 @@ interface GameStore {
   hamsters: HamsterInstance[]
   selectedVariantId: string
 
-  // ── 드로잉 입력 (스트로크 단위) ─────────────────
-  drawnStrokes: Point[][]    // 완료된 스트로크 배열
-  currentStroke: Point[]     // 현재 그리는 중인 스트로크
+  // ── 먹이 ────────────────────────────────────────
+  selectedFoodId: string
+
+  // ── 드로잉 입력 ──────────────────────────────────
+  drawnStrokes: Point[][]
+  currentStroke: Point[]
 
   // ── 게임 진행 ────────────────────────────────────
   phase: GamePhase
@@ -46,6 +50,7 @@ interface GameStore {
   // ── actions ─────────────────────────────────────
   setSelectedVariant: (variantId: string) => void
   rebuildHamster: () => void
+  setSelectedFood: (foodId: string) => void
 
   startStroke: () => void
   addPointToStroke: (p: Point) => void
@@ -66,6 +71,8 @@ interface GameStore {
 export const useGameStore = create<GameStore>((set, get) => ({
   hamsters: [],
   selectedVariantId: 'golden',
+
+  selectedFoodId: 'sunflower',
 
   drawnStrokes: [],
   currentStroke: [],
@@ -96,19 +103,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
     })
   },
 
+  setSelectedFood: (foodId) => set({ selectedFoodId: foodId }),
+
   // ── 드로잉 ──────────────────────────────────────
   startStroke: () => set({ currentStroke: [] }),
-
-  addPointToStroke: (p) =>
-    set((s) => ({ currentStroke: [...s.currentStroke, p] })),
-
+  addPointToStroke: (p) => set((s) => ({ currentStroke: [...s.currentStroke, p] })),
   endStroke: () => {
     const { currentStroke, drawnStrokes } = get()
     if (currentStroke.length > 0) {
       set({ drawnStrokes: [...drawnStrokes, currentStroke], currentStroke: [] })
     }
   },
-
   clearDrawnStrokes: () => set({ drawnStrokes: [], currentStroke: [] }),
 
   // ── 게임 ────────────────────────────────────────

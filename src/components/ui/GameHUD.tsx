@@ -3,12 +3,14 @@ import TopBar from './TopBar'
 import BottomToolbar from './BottomToolbar'
 import StartFAB from './StartFAB'
 import HamsterPickerSheet from './HamsterPickerSheet'
+import FoodPickerSheet from './FoodPickerSheet'
 import SettingsSheet from './SettingsSheet'
 
-type Sheet = 'hamster' | 'settings' | null
+type Sheet = 'hamster' | 'food' | 'settings' | null
 
 export default function GameHUD() {
   const [openSheet, setOpenSheet] = useState<Sheet>(null)
+  const close = () => setOpenSheet(null)
 
   return (
     <>
@@ -24,6 +26,7 @@ export default function GameHUD() {
         }}>
           <TopBar
             onOpenHamster={() => setOpenSheet('hamster')}
+            onOpenFood={() => setOpenSheet('food')}
             onOpenSettings={() => setOpenSheet('settings')}
           />
         </div>
@@ -45,7 +48,7 @@ export default function GameHUD() {
         </div>
       </div>
 
-      {/* 시작 FAB — 우하단 */}
+      {/* 시작 FAB */}
       <div style={{
         position: 'fixed',
         bottom: 'calc(max(16px, env(safe-area-inset-bottom)) + 88px)',
@@ -55,13 +58,10 @@ export default function GameHUD() {
         <StartFAB />
       </div>
 
-      {/* 바텀 시트 */}
-      {openSheet === 'hamster' && (
-        <HamsterPickerSheet onClose={() => setOpenSheet(null)} />
-      )}
-      {openSheet === 'settings' && (
-        <SettingsSheet onClose={() => setOpenSheet(null)} />
-      )}
+      {/* 바텀 시트들 */}
+      {openSheet === 'hamster'  && <HamsterPickerSheet onClose={close} />}
+      {openSheet === 'food'     && <FoodPickerSheet    onClose={close} />}
+      {openSheet === 'settings' && <SettingsSheet      onClose={close} />}
     </>
   )
 }
