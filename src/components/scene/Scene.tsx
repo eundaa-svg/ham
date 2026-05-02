@@ -11,14 +11,14 @@ export default function Scene() {
   return (
     <Canvas
       shadows
-      camera={{ position: [0, 7, 6], fov: 45 }}
+      camera={{ position: [0, 7.5, 5.5], fov: 45 }}
       style={{ width: '100%', height: '100%' }}
       gl={{ antialias: true }}
     >
-      <ambientLight intensity={0.75} color="#FFF8F0" />
+      <ambientLight intensity={0.7} color="#FFF8F0" />
       <directionalLight
-        position={[3, 8, 5]}
-        intensity={0.9}
+        position={[3, 9, 4]}
+        intensity={0.8}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-camera-near={0.5}
