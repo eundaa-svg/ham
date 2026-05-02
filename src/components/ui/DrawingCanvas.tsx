@@ -118,8 +118,8 @@ export default function DrawingCanvas() {
         onPointerLeave={onLeave}
       />
       {empty && (
-        <p className="t-caption" style={{ textAlign: 'center', marginTop: 8 }}>
-          Draw something
+        <p style={{ textAlign: 'center', marginTop: 8, fontSize: 11, fontWeight: 500, color: 'var(--text-subtle)', letterSpacing: '0.01em' }}>
+          모양을 그려보세요
         </p>
       )}
     </div>

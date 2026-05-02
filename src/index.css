@@ -100,6 +100,14 @@ canvas { touch-action: none; }
 }
 
 .t-caption {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+/* 영문 전용 caption (대문자 강조) */
+.t-caption-en {
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.06em;

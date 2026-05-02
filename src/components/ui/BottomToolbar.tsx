@@ -24,7 +24,7 @@ export default function BottomToolbar() {
         borderBottom: isExpanded ? '1px solid var(--line)' : 'none',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span className="t-caption">Canvas</span>
+          <span className="t-caption">그리기</span>
           {drawnStrokes.length > 0 && (
             <span className="t-mono" style={{ fontSize: 11, color: 'var(--text)', fontWeight: 600 }}>
               {String(drawnStrokes.length).padStart(2, '0')}
@@ -38,7 +38,7 @@ export default function BottomToolbar() {
               onClick={clearDrawnStrokes}
               style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)', padding: '4px 8px', letterSpacing: '0.02em' }}
             >
-              Clear
+              지우기
             </button>
           )}
           <button

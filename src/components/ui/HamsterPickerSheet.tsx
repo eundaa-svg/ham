@@ -38,7 +38,7 @@ export default function HamsterPickerSheet({ onClose }: Props) {
         {/* 헤더 */}
         <div style={{ padding: '16px 28px 0' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-            <h3 className="t-display" style={{ fontSize: 22, color: 'var(--text)' }}>Hamster</h3>
+            <h3 className="t-display" style={{ fontSize: 22, color: 'var(--text)' }}>햄스터</h3>
             <span className="t-caption">{String(HAMSTER_VARIANTS.length).padStart(2, '0')}</span>
           </div>
           <div style={{ height: 1, background: 'var(--line)', marginTop: 12 }} />

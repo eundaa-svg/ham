@@ -40,7 +40,7 @@ export default function SettingsSheet({ onClose }: Props) {
         {/* 헤더 */}
         <div style={{ padding: '16px 28px 0' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-            <h3 className="t-display" style={{ fontSize: 22, color: 'var(--text)' }}>Settings</h3>
+            <h3 className="t-display" style={{ fontSize: 22, color: 'var(--text)' }}>똥 설정</h3>
             <span className="t-caption">03</span>
           </div>
           <div style={{ height: 1, background: 'var(--line)', marginTop: 12 }} />
@@ -49,7 +49,7 @@ export default function SettingsSheet({ onClose }: Props) {
         {/* 먹이 선택 */}
         <div style={{ padding: '20px 28px 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <span className="t-caption">Food</span>
+            <span className="t-caption">먹이</span>
             <span style={{ fontSize: 12, color: 'var(--text-secondary)', letterSpacing: '-0.01em' }}>
               {selectedFood?.name}
             </span>
@@ -104,7 +104,7 @@ export default function SettingsSheet({ onClose }: Props) {
           {/* Size */}
           <div>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span className="t-caption">Size</span>
+              <span className="t-caption">크기</span>
               <span className="t-mono" style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>
                 {poopSize.toFixed(2)}
               </span>
@@ -116,7 +116,7 @@ export default function SettingsSheet({ onClose }: Props) {
           {/* Spacing */}
           <div>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span className="t-caption">Spacing</span>
+              <span className="t-caption">간격</span>
               <span className="t-mono" style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>
                 {poopSpacing.toFixed(3)}
               </span>
