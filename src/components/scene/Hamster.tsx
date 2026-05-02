@@ -39,7 +39,7 @@ function HamsterModel({ modelPath }: { modelPath: string }) {
     })
     return cloned
   }, [scene])
-  return <primitive object={clonedScene} scale={[8, 8, 8]} position={[0, 0.5, 0]} />
+  return <primitive object={clonedScene} scale={[10, 10, 10]} position={[0, 0.5, 0]} />
 }
 
 export default function Hamster({ variantId, initialPosition = [0, 0, 0] }: HamsterProps) {
